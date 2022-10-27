@@ -1,0 +1,10 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prettier"],
+  "rules": {
+    // Enable when migration over
+    // '@typescript-eslint/no-explicit-any': 2,
+    "prettier/prettier": "error"
+  }
+}

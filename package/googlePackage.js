@@ -1,24 +1,24 @@
-'use strict';
+'use strict'
 
-const BbPromise = require('bluebird');
+const BbPromise = require('bluebird')
 
-const cleanupServerlessDir = require('./lib/cleanupServerlessDir');
-const validate = require('../shared/validate');
-const utils = require('../shared/utils');
-const setDeploymentBucketName = require('../shared/setDeploymentBucketName');
-const prepareDeployment = require('./lib/prepareDeployment');
-const saveCreateTemplateFile = require('./lib/writeFilesToDisk');
-const mergeServiceResources = require('./lib/mergeServiceResources');
-const generateArtifactDirectoryName = require('./lib/generateArtifactDirectoryName');
-const compileFunctions = require('./lib/compileFunctions');
-const saveUpdateTemplateFile = require('./lib/writeFilesToDisk');
+const cleanupServerlessDir = require('./lib/cleanupServerlessDir')
+const validate = require('../shared/validate')
+const utils = require('../shared/utils')
+const setDeploymentBucketName = require('../shared/setDeploymentBucketName')
+const prepareDeployment = require('./lib/prepareDeployment')
+const saveCreateTemplateFile = require('./lib/writeFilesToDisk')
+const mergeServiceResources = require('./lib/mergeServiceResources')
+const generateArtifactDirectoryName = require('./lib/generateArtifactDirectoryName')
+const compileFunctions = require('./lib/compileFunctions')
+const saveUpdateTemplateFile = require('./lib/writeFilesToDisk')
 
 class GooglePackage {
   constructor(serverless, options) {
-    this.serverless = serverless;
-    this.options = options;
-    this.provider = this.serverless.getProvider('google');
-    this.serverless.configSchemaHandler.defineFunctionEvent('google', 'http', { type: 'string' });
+    this.serverless = serverless
+    this.options = options
+    this.provider = this.serverless.getProvider('google')
+    this.serverless.configSchemaHandler.defineFunctionEvent('google', 'http', { type: 'string' })
     this.serverless.configSchemaHandler.defineFunctionEvent('google', 'event', {
       type: 'object',
       properties: {
@@ -43,7 +43,7 @@ class GooglePackage {
       },
       required: ['eventType', 'resource'],
       additionalProperties: false,
-    });
+    })
 
     Object.assign(
       this,
@@ -56,14 +56,13 @@ class GooglePackage {
       generateArtifactDirectoryName,
       compileFunctions,
       mergeServiceResources,
-      saveUpdateTemplateFile
-    );
+      saveUpdateTemplateFile,
+    )
 
     this.hooks = {
       'package:cleanup': () => BbPromise.bind(this).then(this.cleanupServerlessDir),
 
-      'before:package:initialize': () =>
-        BbPromise.bind(this).then(this.validate).then(this.setDefaults),
+      'before:package:initialize': () => BbPromise.bind(this).then(this.validate).then(this.setDefaults),
 
       'package:initialize': () =>
         BbPromise.bind(this)
@@ -71,15 +70,13 @@ class GooglePackage {
           .then(this.prepareDeployment)
           .then(this.saveCreateTemplateFile),
 
-      'before:package:compileFunctions': () =>
-        BbPromise.bind(this).then(this.generateArtifactDirectoryName),
+      'before:package:compileFunctions': () => BbPromise.bind(this).then(this.generateArtifactDirectoryName),
 
       'package:compileFunctions': () => BbPromise.bind(this).then(this.compileFunctions),
 
-      'package:finalize': () =>
-        BbPromise.bind(this).then(this.mergeServiceResources).then(this.saveUpdateTemplateFile),
-    };
+      'package:finalize': () => BbPromise.bind(this).then(this.mergeServiceResources).then(this.saveUpdateTemplateFile),
+    }
   }
 }
 
-module.exports = GooglePackage;
+module.exports = GooglePackage

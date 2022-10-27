@@ -1,39 +1,39 @@
-'use strict';
+'use strict'
 
-const GoogleProvider = require('../../provider/googleProvider');
-const GooglePackage = require('../googlePackage');
-const Serverless = require('../../test/serverless');
+const GoogleProvider = require('../../provider/googleProvider')
+const GooglePackage = require('../googlePackage')
+const Serverless = require('../../test/serverless')
 
 describe('MergeServiceResources', () => {
-  let serverless;
-  let googlePackage;
+  let serverless
+  let googlePackage
 
   beforeEach(() => {
-    serverless = new Serverless();
-    serverless.service.service = 'my-service';
+    serverless = new Serverless()
+    serverless.service.service = 'my-service'
     serverless.service.provider = {
       compiledConfigurationTemplate: {},
-    };
-    serverless.setProvider('google', new GoogleProvider(serverless));
+    }
+    serverless.setProvider('google', new GoogleProvider(serverless))
     const options = {
       stage: 'dev',
       region: 'us-central1',
-    };
-    googlePackage = new GooglePackage(serverless, options);
-  });
+    }
+    googlePackage = new GooglePackage(serverless, options)
+  })
 
   it('should resolve if service resources are not defined', () =>
     googlePackage.mergeServiceResources().then(() => {
-      expect(serverless.service.provider.compiledConfigurationTemplate).toEqual({});
-    }));
+      expect(serverless.service.provider.compiledConfigurationTemplate).toEqual({})
+    }))
 
   it('should resolve if service resources is empty', () => {
-    serverless.service.resources = {};
+    serverless.service.resources = {}
 
     return googlePackage.mergeServiceResources().then(() => {
-      expect(serverless.service.provider.compiledConfigurationTemplate).toEqual({});
-    });
-  });
+      expect(serverless.service.provider.compiledConfigurationTemplate).toEqual({})
+    })
+  })
 
   it('should merge all the resources if provided', () => {
     serverless.service.provider.compiledConfigurationTemplate = {
@@ -46,7 +46,7 @@ describe('MergeServiceResources', () => {
           },
         },
       ],
-    };
+    }
 
     serverless.service.resources = {
       resources: [
@@ -64,7 +64,7 @@ describe('MergeServiceResources', () => {
           name: 'my-template',
         },
       ],
-    };
+    }
 
     const expectedResult = {
       resources: [
@@ -89,10 +89,10 @@ describe('MergeServiceResources', () => {
           name: 'my-template',
         },
       ],
-    };
+    }
 
     return googlePackage.mergeServiceResources().then(() => {
-      expect(serverless.service.provider.compiledConfigurationTemplate).toEqual(expectedResult);
-    });
-  });
-});
+      expect(serverless.service.provider.compiledConfigurationTemplate).toEqual(expectedResult)
+    })
+  })
+})

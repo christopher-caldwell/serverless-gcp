@@ -1,23 +1,23 @@
-'use strict';
+'use strict'
 
-const sinon = require('sinon');
+const sinon = require('sinon')
 
-const GoogleProvider = require('../../provider/googleProvider');
-const GooglePackage = require('../googlePackage');
-const Serverless = require('../../test/serverless');
+const GoogleProvider = require('../../provider/googleProvider')
+const GooglePackage = require('../googlePackage')
+const Serverless = require('../../test/serverless')
 
 describe('CompileFunctions', () => {
-  let serverless;
-  let googlePackage;
-  let consoleLogStub;
+  let serverless
+  let googlePackage
+  let consoleLogStub
 
   beforeEach(() => {
-    serverless = new Serverless();
-    serverless.service.service = 'my-service';
+    serverless = new Serverless()
+    serverless.service.service = 'my-service'
     serverless.service.package = {
       artifact: 'artifact.zip',
       artifactDirectoryName: 'some-path',
-    };
+    }
     serverless.service.provider = {
       compiledConfigurationTemplate: {
         resources: [],
@@ -25,18 +25,18 @@ describe('CompileFunctions', () => {
       deploymentBucketName: 'sls-my-service-dev-12345678',
       project: 'myProject',
       region: 'us-central1',
-    };
-    serverless.setProvider('google', new GoogleProvider(serverless));
+    }
+    serverless.setProvider('google', new GoogleProvider(serverless))
     const options = {
       stage: 'dev',
-    };
-    googlePackage = new GooglePackage(serverless, options);
-    consoleLogStub = sinon.stub(googlePackage.serverless.cli, 'log').returns();
-  });
+    }
+    googlePackage = new GooglePackage(serverless, options)
+    consoleLogStub = sinon.stub(googlePackage.serverless.cli, 'log').returns()
+  })
 
   afterEach(() => {
-    googlePackage.serverless.cli.log.restore();
-  });
+    googlePackage.serverless.cli.log.restore()
+  })
 
   describe('#compileFunctions()', () => {
     it('should throw an error if the function has no handler property', () => {
@@ -44,10 +44,10 @@ describe('CompileFunctions', () => {
         func1: {
           handler: null,
         },
-      };
+      }
 
-      expect(() => googlePackage.compileFunctions()).toThrow(Error);
-    });
+      expect(() => googlePackage.compileFunctions()).toThrow(Error)
+    })
 
     it('should throw an error if the function has no events property', () => {
       googlePackage.serverless.service.functions = {
@@ -55,10 +55,10 @@ describe('CompileFunctions', () => {
           handler: 'func1',
           events: null,
         },
-      };
+      }
 
-      expect(() => googlePackage.compileFunctions()).toThrow(Error);
-    });
+      expect(() => googlePackage.compileFunctions()).toThrow(Error)
+    })
 
     it('should throw an error if the function has 0 events', () => {
       googlePackage.serverless.service.functions = {
@@ -66,10 +66,10 @@ describe('CompileFunctions', () => {
           handler: 'func1',
           events: [],
         },
-      };
+      }
 
-      expect(() => googlePackage.compileFunctions()).toThrow(Error);
-    });
+      expect(() => googlePackage.compileFunctions()).toThrow(Error)
+    })
 
     it('should throw an error if the function has more than 1 event', () => {
       googlePackage.serverless.service.functions = {
@@ -77,10 +77,10 @@ describe('CompileFunctions', () => {
           handler: 'func1',
           events: [{ http: 'event1' }, { http: 'event2' }],
         },
-      };
+      }
 
-      expect(() => googlePackage.compileFunctions()).toThrow(Error);
-    });
+      expect(() => googlePackage.compileFunctions()).toThrow(Error)
+    })
 
     it('should throw an error if the functions event is not supported', () => {
       googlePackage.serverless.service.functions = {
@@ -88,10 +88,10 @@ describe('CompileFunctions', () => {
           handler: 'func1',
           events: [{ invalidEvent: 'event1' }],
         },
-      };
+      }
 
-      expect(() => googlePackage.compileFunctions()).toThrow(Error);
-    });
+      expect(() => googlePackage.compileFunctions()).toThrow(Error)
+    })
 
     it('should set the memory size based on the functions configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -101,7 +101,7 @@ describe('CompileFunctions', () => {
           runtime: 'nodejs10',
           events: [{ http: 'foo' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -121,15 +121,15 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set the memory size based on the provider configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -137,8 +137,8 @@ describe('CompileFunctions', () => {
           handler: 'func1',
           events: [{ http: 'foo' }],
         },
-      };
-      googlePackage.serverless.service.provider.memorySize = 1024;
+      }
+      googlePackage.serverless.service.provider.memorySize = 1024
 
       const compiledResources = [
         {
@@ -158,15 +158,15 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set the timout based on the functions configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -175,7 +175,7 @@ describe('CompileFunctions', () => {
           timeout: '120s',
           events: [{ http: 'foo' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -195,15 +195,15 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set the timeout based on the provider configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -211,8 +211,8 @@ describe('CompileFunctions', () => {
           handler: 'func1',
           events: [{ http: 'foo' }],
         },
-      };
-      googlePackage.serverless.service.provider.timeout = '120s';
+      }
+      googlePackage.serverless.service.provider.timeout = '120s'
 
       const compiledResources = [
         {
@@ -232,15 +232,15 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set the labels based on the functions configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -251,7 +251,7 @@ describe('CompileFunctions', () => {
           },
           events: [{ http: 'foo' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -273,15 +273,15 @@ describe('CompileFunctions', () => {
             },
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set the labels based on the provider configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -289,10 +289,10 @@ describe('CompileFunctions', () => {
           handler: 'func1',
           events: [{ http: 'foo' }],
         },
-      };
+      }
       googlePackage.serverless.service.provider.labels = {
         test: 'label',
-      };
+      }
 
       const compiledResources = [
         {
@@ -314,15 +314,15 @@ describe('CompileFunctions', () => {
             },
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set the labels based on the merged provider and function configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -333,11 +333,11 @@ describe('CompileFunctions', () => {
             test: 'functionLabel',
           },
         },
-      };
+      }
       googlePackage.serverless.service.provider.labels = {
         test: 'providerLabel',
         secondTest: 'tested',
-      };
+      }
 
       const compiledResources = [
         {
@@ -360,15 +360,15 @@ describe('CompileFunctions', () => {
             },
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set the environment variables based on the function configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -379,7 +379,7 @@ describe('CompileFunctions', () => {
           },
           events: [{ http: 'foo' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -402,15 +402,15 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set the environment variables based on the provider configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -418,10 +418,10 @@ describe('CompileFunctions', () => {
           handler: 'func1',
           events: [{ http: 'foo' }],
         },
-      };
+      }
       googlePackage.serverless.service.provider.environment = {
         TEST_VAR: 'test',
-      };
+      }
 
       const compiledResources = [
         {
@@ -444,15 +444,15 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should merge the environment variables on the provider configuration and function definition', () => {
       googlePackage.serverless.service.functions = {
@@ -464,11 +464,11 @@ describe('CompileFunctions', () => {
           },
           events: [{ http: 'foo' }],
         },
-      };
+      }
       googlePackage.serverless.service.provider.environment = {
         TEST_VAR: 'test',
         TEST_FOO: 'foo',
-      };
+      }
 
       const compiledResources = [
         {
@@ -493,19 +493,19 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
         expect(googlePackage.serverless.service.provider.environment).toEqual({
           TEST_VAR: 'test',
           TEST_FOO: 'foo',
-        });
-      });
-    });
+        })
+      })
+    })
 
     it('should set the secret environment variables based on the function configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -519,7 +519,7 @@ describe('CompileFunctions', () => {
           },
           events: [{ http: 'foo' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -546,15 +546,15 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should merge the secret environment variables on the provider configuration and function definition', () => {
       googlePackage.serverless.service.functions = {
@@ -566,11 +566,11 @@ describe('CompileFunctions', () => {
           },
           events: [{ http: 'foo' }],
         },
-      };
+      }
       googlePackage.serverless.service.provider.secrets = {
         TEST_SECRET: { secret: 'secretbase', version: 'latest' },
         TEST_SECRET_PROVIDER: { secret: 'secretprovider', version: 'latest' },
-      };
+      }
 
       const compiledResources = [
         {
@@ -595,19 +595,19 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
         expect(googlePackage.serverless.service.provider.secrets).toEqual({
           TEST_SECRET: { secret: 'secretbase', version: 'latest' },
           TEST_SECRET_PROVIDER: { secret: 'secretprovider', version: 'latest' },
-        });
-      });
-    });
+        })
+      })
+    })
 
     it('should compile "http" events properly', () => {
       googlePackage.serverless.service.functions = {
@@ -615,7 +615,7 @@ describe('CompileFunctions', () => {
           handler: 'func1',
           events: [{ http: 'foo' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -635,15 +635,15 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.calledOnce).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.calledOnce).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should compile "event" events properly', () => {
       googlePackage.serverless.service.functions = {
@@ -670,7 +670,7 @@ describe('CompileFunctions', () => {
             },
           ],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -710,15 +710,15 @@ describe('CompileFunctions', () => {
             labels: {},
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.called).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.called).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set vpc connection base on the function configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -729,7 +729,7 @@ describe('CompileFunctions', () => {
           vpc: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           events: [{ http: 'foo' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -750,15 +750,15 @@ describe('CompileFunctions', () => {
             vpcConnector: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.called).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.called).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set max instances on the function configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -770,7 +770,7 @@ describe('CompileFunctions', () => {
           vpc: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           events: [{ http: 'foo' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -792,15 +792,15 @@ describe('CompileFunctions', () => {
             vpcConnector: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.called).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.called).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should not require max instances on each function configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -819,7 +819,7 @@ describe('CompileFunctions', () => {
           vpc: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           events: [{ http: 'bar' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -859,15 +859,15 @@ describe('CompileFunctions', () => {
             vpcConnector: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.called).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.called).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should set min instances on the function configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -879,7 +879,7 @@ describe('CompileFunctions', () => {
           vpc: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           events: [{ http: 'foo' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -901,15 +901,15 @@ describe('CompileFunctions', () => {
             vpcConnector: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.called).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
+        expect(consoleLogStub.called).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
 
     it('should not require min instances on each function configuration', () => {
       googlePackage.serverless.service.functions = {
@@ -928,7 +928,7 @@ describe('CompileFunctions', () => {
           vpc: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           events: [{ http: 'bar' }],
         },
-      };
+      }
 
       const compiledResources = [
         {
@@ -968,16 +968,16 @@ describe('CompileFunctions', () => {
             vpcConnector: 'projects/pg-us-n-app-123456/locations/us-central1/connectors/my-vpc',
           },
         },
-      ];
+      ]
 
       return googlePackage.compileFunctions().then(() => {
-        expect(consoleLogStub.called).toEqual(true);
-        expect(
-          googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-        ).toEqual(compiledResources);
-      });
-    });
-  });
+        expect(consoleLogStub.called).toEqual(true)
+        expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+          compiledResources,
+        )
+      })
+    })
+  })
 
   it('should allow vpc as short name', () => {
     googlePackage.serverless.service.functions = {
@@ -988,7 +988,7 @@ describe('CompileFunctions', () => {
         vpc: 'my-vpc',
         events: [{ http: 'foo' }],
       },
-    };
+    }
 
     const compiledResources = [
       {
@@ -1009,15 +1009,15 @@ describe('CompileFunctions', () => {
           vpcConnector: 'my-vpc',
         },
       },
-    ];
+    ]
 
     return googlePackage.compileFunctions().then(() => {
-      expect(consoleLogStub.called).toEqual(true);
-      expect(
-        googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-      ).toEqual(compiledResources);
-    });
-  });
+      expect(consoleLogStub.called).toEqual(true)
+      expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+        compiledResources,
+      )
+    })
+  })
 
   it('should allow vpc egress all at function level', () => {
     googlePackage.serverless.service.functions = {
@@ -1029,7 +1029,7 @@ describe('CompileFunctions', () => {
         vpcEgress: 'all',
         events: [{ http: 'foo' }],
       },
-    };
+    }
 
     const compiledResources = [
       {
@@ -1051,15 +1051,15 @@ describe('CompileFunctions', () => {
           vpcConnectorEgressSettings: 'ALL_TRAFFIC',
         },
       },
-    ];
+    ]
 
     return googlePackage.compileFunctions().then(() => {
-      expect(consoleLogStub.called).toEqual(true);
-      expect(
-        googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-      ).toEqual(compiledResources);
-    });
-  });
+      expect(consoleLogStub.called).toEqual(true)
+      expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+        compiledResources,
+      )
+    })
+  })
 
   it('should allow vpc egress private at function level', () => {
     googlePackage.serverless.service.functions = {
@@ -1071,7 +1071,7 @@ describe('CompileFunctions', () => {
         vpcEgress: 'private',
         events: [{ http: 'foo' }],
       },
-    };
+    }
 
     const compiledResources = [
       {
@@ -1093,15 +1093,15 @@ describe('CompileFunctions', () => {
           vpcConnectorEgressSettings: 'PRIVATE_RANGES_ONLY',
         },
       },
-    ];
+    ]
 
     return googlePackage.compileFunctions().then(() => {
-      expect(consoleLogStub.called).toEqual(true);
-      expect(
-        googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-      ).toEqual(compiledResources);
-    });
-  });
+      expect(consoleLogStub.called).toEqual(true)
+      expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+        compiledResources,
+      )
+    })
+  })
 
   it('should allow vpc egress all at provider level', () => {
     googlePackage.serverless.service.functions = {
@@ -1112,9 +1112,9 @@ describe('CompileFunctions', () => {
         vpc: 'my-vpc',
         events: [{ http: 'foo' }],
       },
-    };
+    }
 
-    googlePackage.serverless.service.provider.vpcEgress = 'all';
+    googlePackage.serverless.service.provider.vpcEgress = 'all'
 
     const compiledResources = [
       {
@@ -1136,15 +1136,15 @@ describe('CompileFunctions', () => {
           vpcConnectorEgressSettings: 'ALL_TRAFFIC',
         },
       },
-    ];
+    ]
 
     return googlePackage.compileFunctions().then(() => {
-      expect(consoleLogStub.called).toEqual(true);
-      expect(
-        googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-      ).toEqual(compiledResources);
-    });
-  });
+      expect(consoleLogStub.called).toEqual(true)
+      expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+        compiledResources,
+      )
+    })
+  })
 
   it('should allow vpc egress private at provider level', () => {
     googlePackage.serverless.service.functions = {
@@ -1155,9 +1155,9 @@ describe('CompileFunctions', () => {
         vpc: 'my-vpc',
         events: [{ http: 'foo' }],
       },
-    };
+    }
 
-    googlePackage.serverless.service.provider.vpcEgress = 'private';
+    googlePackage.serverless.service.provider.vpcEgress = 'private'
 
     const compiledResources = [
       {
@@ -1179,15 +1179,15 @@ describe('CompileFunctions', () => {
           vpcConnectorEgressSettings: 'PRIVATE_RANGES_ONLY',
         },
       },
-    ];
+    ]
 
     return googlePackage.compileFunctions().then(() => {
-      expect(consoleLogStub.called).toEqual(true);
-      expect(
-        googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-      ).toEqual(compiledResources);
-    });
-  });
+      expect(consoleLogStub.called).toEqual(true)
+      expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+        compiledResources,
+      )
+    })
+  })
 
   it('should replace vpc egress private at provider level for a vpc egress all defined at function level', () => {
     googlePackage.serverless.service.functions = {
@@ -1199,9 +1199,9 @@ describe('CompileFunctions', () => {
         events: [{ http: 'foo' }],
         vpcEgress: 'all',
       },
-    };
+    }
 
-    googlePackage.serverless.service.provider.vpcEgress = 'private';
+    googlePackage.serverless.service.provider.vpcEgress = 'private'
 
     const compiledResources = [
       {
@@ -1223,13 +1223,13 @@ describe('CompileFunctions', () => {
           vpcConnectorEgressSettings: 'ALL_TRAFFIC',
         },
       },
-    ];
+    ]
 
     return googlePackage.compileFunctions().then(() => {
-      expect(consoleLogStub.called).toEqual(true);
-      expect(
-        googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources
-      ).toEqual(compiledResources);
-    });
-  });
-});
+      expect(consoleLogStub.called).toEqual(true)
+      expect(googlePackage.serverless.service.provider.compiledConfigurationTemplate.resources).toEqual(
+        compiledResources,
+      )
+    })
+  })
+})

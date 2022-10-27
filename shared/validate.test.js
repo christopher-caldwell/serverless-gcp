@@ -1,93 +1,87 @@
-'use strict';
+'use strict'
 
-const sinon = require('sinon');
-const BbPromise = require('bluebird');
+const sinon = require('sinon')
+const BbPromise = require('bluebird')
 
-const validate = require('./validate');
-const GoogleProvider = require('../provider/googleProvider');
-const Serverless = require('../test/serverless');
-const GoogleCommand = require('../test/googleCommand');
+const validate = require('./validate')
+const GoogleProvider = require('../provider/googleProvider')
+const Serverless = require('../test/serverless')
+const GoogleCommand = require('../test/googleCommand')
 
 describe('Validate', () => {
-  let serverless;
-  let googleCommand;
+  let serverless
+  let googleCommand
 
   beforeEach(() => {
-    serverless = new Serverless();
+    serverless = new Serverless()
     serverless.config = {
       servicePath: true,
-    };
+    }
     serverless.service = {
       service: 'some-default-service',
-    };
-    serverless.setProvider('google', new GoogleProvider(serverless));
-    googleCommand = new GoogleCommand(serverless, {}, validate);
-  });
+    }
+    serverless.setProvider('google', new GoogleProvider(serverless))
+    googleCommand = new GoogleCommand(serverless, {}, validate)
+  })
 
   describe('#validate()', () => {
-    let validateServicePathStub;
-    let validateServiceNameStub;
-    let validateHandlersStub;
+    let validateServicePathStub
+    let validateServiceNameStub
+    let validateHandlersStub
 
     beforeEach(() => {
-      validateServicePathStub = sinon
-        .stub(googleCommand, 'validateServicePath')
-        .returns(BbPromise.resolve());
-      validateServiceNameStub = sinon
-        .stub(googleCommand, 'validateServiceName')
-        .returns(BbPromise.resolve());
-      validateHandlersStub = sinon
-        .stub(googleCommand, 'validateHandlers')
-        .returns(BbPromise.resolve());
-    });
+      validateServicePathStub = sinon.stub(googleCommand, 'validateServicePath').returns(BbPromise.resolve())
+      validateServiceNameStub = sinon.stub(googleCommand, 'validateServiceName').returns(BbPromise.resolve())
+      validateHandlersStub = sinon.stub(googleCommand, 'validateHandlers').returns(BbPromise.resolve())
+    })
 
     afterEach(() => {
-      googleCommand.validateServicePath.restore();
-      googleCommand.validateServiceName.restore();
-      googleCommand.validateHandlers.restore();
-    });
+      googleCommand.validateServicePath.restore()
+      googleCommand.validateServiceName.restore()
+      googleCommand.validateHandlers.restore()
+    })
 
     it('should run promise chain', () =>
       googleCommand.validate().then(() => {
-        expect(validateServicePathStub.calledOnce).toEqual(true);
-        expect(validateServiceNameStub.calledAfter(validateServicePathStub));
-        expect(validateHandlersStub.calledAfter(validateServiceNameStub));
-      }));
-  });
+        expect(validateServicePathStub.calledOnce).toEqual(true)
+        expect(validateServiceNameStub.calledAfter(validateServicePathStub))
+        expect(validateHandlersStub.calledAfter(validateServiceNameStub))
+      }))
+  })
 
   describe('#validateServicePath()', () => {
     it('should throw an error if not inside service', () => {
-      serverless.config.servicePath = false;
+      serverless.config.servicePath = false
 
-      expect(() => googleCommand.validateServicePath()).toThrow(Error);
-    });
+      expect(() => googleCommand.validateServicePath()).toThrow(Error)
+    })
 
     it('should not throw an error if inside service', () => {
-      serverless.config.servicePath = true;
+      serverless.config.servicePath = true
 
-      expect(() => googleCommand.validateServicePath()).not.toThrow(Error);
-    });
-  });
+      expect(() => googleCommand.validateServicePath()).not.toThrow(Error)
+    })
+  })
 
   describe('#validateServiceName()', () => {
     it('should throw an error if the service name contains the string "goog"', () => {
-      serverless.service.service = 'service-name-with-goog-in-it';
+      serverless.service.service = 'service-name-with-goog-in-it'
 
-      expect(() => googleCommand.validateServiceName()).toThrow(Error);
-    });
+      expect(() => googleCommand.validateServiceName()).toThrow(Error)
+    })
 
     it('should throw an error if the service name contains underscores', () => {
-      serverless.service.service = 'service_name';
+      serverless.service.service = 'service_name'
 
-      expect(() => googleCommand.validateServiceName()).toThrow(Error);
-    });
+      expect(() => googleCommand.validateServiceName()).toThrow(Error)
+    })
 
     it('should not throw an error if the service name is valid', () => {
-      serverless.service.service = 'service-name';
+      serverless.service.service = 'service-name'
 
-      expect(() => googleCommand.validateServiceName()).not.toThrow(Error);
-    });
-  });
+      expect(() => googleCommand.validateServiceName()).not.toThrow(Error)
+    })
+  })
 
   describe('#validateHandlers()', () => {
     it('should throw an error if the handler name contains an invalid character', () => {
@@ -98,76 +92,64 @@ describe('Validate', () => {
         bar: {
           handler: 'invalid/handler',
         },
-      };
+      }
 
-      expect(() => googleCommand.validateHandlers()).toThrow(Error);
-    });
+      expect(() => googleCommand.validateHandlers()).toThrow(Error)
+    })
 
     it('should not throw an error if the function handler is valid', () => {
       googleCommand.serverless.service.functions = {
         foo: {
           handler: 'validHandler',
         },
-      };
+      }
 
-      expect(() => googleCommand.validateHandlers()).not.toThrow(Error);
-    });
-  });
+      expect(() => googleCommand.validateHandlers()).not.toThrow(Error)
+    })
+  })
 
   describe('#validateEventsProperty()', () => {
-    const functionName = 'functionName';
+    const functionName = 'functionName'
     const eventEvent = {
       event: {},
-    };
+    }
     const httpEvent = {
       http: {},
-    };
+    }
     const unknownEvent = {
       unknown: {},
-    };
+    }
 
     it('should throw if the configuration of function has no events', () => {
-      expect(() => validate.validateEventsProperty({}, functionName)).toThrow();
-    });
+      expect(() => validate.validateEventsProperty({}, functionName)).toThrow()
+    })
 
     it('should throw if the configuration of function has an empty events array', () => {
-      expect(() => validate.validateEventsProperty({ events: [] }, functionName)).toThrow();
-    });
+      expect(() => validate.validateEventsProperty({ events: [] }, functionName)).toThrow()
+    })
 
     it('should throw if the configuration of function has more than one events', () => {
-      expect(() =>
-        validate.validateEventsProperty({ events: [eventEvent, httpEvent] }, functionName)
-      ).toThrow();
-    });
+      expect(() => validate.validateEventsProperty({ events: [eventEvent, httpEvent] }, functionName)).toThrow()
+    })
 
     it('should throw if the configuration of function has an unknown event', () => {
-      expect(() =>
-        validate.validateEventsProperty({ events: [unknownEvent] }, functionName)
-      ).toThrow();
-    });
+      expect(() => validate.validateEventsProperty({ events: [unknownEvent] }, functionName)).toThrow()
+    })
 
     it('should pass if the configuration of function has an http event', () => {
-      expect(() =>
-        validate.validateEventsProperty({ events: [httpEvent] }, functionName)
-      ).not.toThrow();
-    });
+      expect(() => validate.validateEventsProperty({ events: [httpEvent] }, functionName)).not.toThrow()
+    })
 
     it('should pass if the configuration of function has an event event', () => {
-      expect(() =>
-        validate.validateEventsProperty({ events: [eventEvent] }, functionName)
-      ).not.toThrow();
-    });
+      expect(() => validate.validateEventsProperty({ events: [eventEvent] }, functionName)).not.toThrow()
+    })
 
     it('should throw if the configuration of function has an http event but http event is not supported', () => {
-      expect(() =>
-        validate.validateEventsProperty({ events: [unknownEvent] }, functionName, ['event'])
-      ).toThrow();
-    });
+      expect(() => validate.validateEventsProperty({ events: [unknownEvent] }, functionName, ['event'])).toThrow()
+    })
 
     it('should pass if the configuration of function has an event event and event is supported', () => {
-      expect(() =>
-        validate.validateEventsProperty({ events: [eventEvent] }, functionName, ['event'])
-      ).not.toThrow();
-    });
-  });
-});
+      expect(() => validate.validateEventsProperty({ events: [eventEvent] }, functionName, ['event'])).not.toThrow()
+    })
+  })
+})

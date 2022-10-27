@@ -1,9 +1,7 @@
 {
-  "name": "serverless-google-cloudfunctions",
+  "name": "@caldwell/serverless-google-cloud",
   "version": "4.6.0",
-  "description": "Provider plugin for the Serverless Framework v1.x which adds support for Google Cloud Functions.",
-  "author": "serverless.com",
-  "repository": "serverless/serverless-google-cloudfunctions",
+  "description": "Provider plugin for the Serverless Framework that adds support for Google Cloud Functions.",
   "homepage": "https://github.com/serverless/serverless-google-cloudfunctions",
   "keywords": [
     "serverless",
@@ -11,33 +9,9 @@
     "serverless applications",
     "serverless modules",
     "google cloud functions",
-    "iot",
-    "internet of things",
+    "google",
     "serverless.com"
   ],
-  "eslintConfig": {
-    "extends": "@serverless/eslint-config/node",
-    "root": true
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint"
-    ],
-    "*.{css,html,js,json,md,yaml,yml}": [
-      "prettier -c"
-    ]
-  },
-  "standard-version": {
-    "skip": {
-      "commit": true,
-      "tag": true
-    }
-  },
   "dependencies": {
     "async": "^2.6.4",
     "bluebird": "^3.7.2",
@@ -51,6 +25,9 @@
   "devDependencies": {
     "@commitlint/cli": "^9.1.2",
     "@serverless/eslint-config": "^2.2.0",
+    "@types/bluebird": "^3.5.37",
+    "@types/lodash": "^4.14.186",
+    "@types/serverless": "^3.12.8",
     "coveralls": "^3.1.1",
     "eslint": "^7.32.0",
     "eslint-plugin-import": "^2.26.0",
@@ -67,10 +44,12 @@
     "serverless": "2 || 3"
   },
   "scripts": {
+    "lint": "eslint ./src --ext .js,.ts",
+    "format": "prettier --write .",
+    "type-check": "tsc --noEmit",
     "commitlint": "commitlint -f HEAD@{15}",
     "commitlint:pull-request": "commitlint -f HEAD~1",
     "coverage": "jest --coverage",
-    "lint": "eslint . --cache",
     "lint:updated": "pipe-git-updated --ext=js -- eslint --cache",
     "prepare-release": "standard-version && prettier --write CHANGELOG.md",
     "prettier-check": "prettier -c --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",

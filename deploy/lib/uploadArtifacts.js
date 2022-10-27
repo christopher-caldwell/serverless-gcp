@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-const fs = require('fs');
+const fs = require('fs')
 
 module.exports = {
   uploadArtifacts() {
-    this.serverless.cli.log('Uploading artifacts...');
+    this.serverless.cli.log('Uploading artifacts...')
 
     const params = {
       bucket: this.serverless.service.provider.deploymentBucketName,
@@ -16,10 +16,10 @@ module.exports = {
         mimeType: 'application/octet-stream',
         body: fs.createReadStream(this.serverless.service.package.artifact),
       },
-    };
+    }
 
     return this.provider.request('storage', 'objects', 'insert', params).then(() => {
-      this.serverless.cli.log('Artifacts successfully uploaded...');
-    });
+      this.serverless.cli.log('Artifacts successfully uploaded...')
+    })
   },
-};
+}

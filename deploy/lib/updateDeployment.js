@@ -1,42 +1,36 @@
-'use strict';
+'use strict'
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
 
-const BbPromise = require('bluebird');
+const BbPromise = require('bluebird')
 
 module.exports = {
   updateDeployment() {
-    return BbPromise.bind(this).then(this.getDeployment).then(this.update);
+    return BbPromise.bind(this).then(this.getDeployment).then(this.update)
   },
 
   getDeployment() {
     const params = {
       project: this.serverless.service.provider.project,
-    };
+    }
 
-    return this.provider
-      .request('deploymentmanager', 'deployments', 'list', params)
-      .then((response) => {
-        const deployment = response.deployments.find((dep) => {
-          const name = `sls-${this.serverless.service.service}-${this.options.stage}`;
-          return dep.name === name;
-        });
+    return this.provider.request('deploymentmanager', 'deployments', 'list', params).then((response) => {
+      const deployment = response.deployments.find((dep) => {
+        const name = `sls-${this.serverless.service.service}-${this.options.stage}`
+        return dep.name === name
+      })
 
-        return deployment;
-      });
+      return deployment
+    })
   },
 
   update(deployment) {
-    this.serverless.cli.log('Updating deployment...');
+    this.serverless.cli.log('Updating deployment...')
 
-    const filePath = path.join(
-      this.serverless.config.servicePath,
-      '.serverless',
-      'configuration-template-update.yml'
-    );
+    const filePath = path.join(this.serverless.config.servicePath, '.serverless', 'configuration-template-update.yml')
 
-    const deploymentName = `sls-${this.serverless.service.service}-${this.options.stage}`;
+    const deploymentName = `sls-${this.serverless.service.service}-${this.options.stage}`
 
     const params = {
       project: this.serverless.service.provider.project,
@@ -50,10 +44,10 @@ module.exports = {
           },
         },
       },
-    };
+    }
 
     return this.provider
       .request('deploymentmanager', 'deployments', 'update', params)
-      .then(() => this.monitorDeployment(deploymentName, 'update', 5000));
+      .then(() => this.monitorDeployment(deploymentName, 'update', 5000))
   },
-};
+}
