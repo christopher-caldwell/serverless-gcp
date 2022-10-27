@@ -2,7 +2,9 @@
 
 /* eslint no-use-before-define: 0 */
 
+// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
 const BbPromise = require('bluebird')
+// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable 'chalk'.
 const chalk = require('chalk')
 
 module.exports = {
@@ -54,6 +56,7 @@ module.exports = {
   },
 }
 
+// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable 'getGoogleC... Remove this comment to see the full error message
 const getGoogleCloudFunctionName = (serviceFunctions, func) => {
   if (!serviceFunctions[func]) {
     const errorMessage = [

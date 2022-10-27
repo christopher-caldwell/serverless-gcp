@@ -1,7 +1,16 @@
 'use strict'
 
 // mock of the serverless instance
+// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable 'Serverless... Remove this comment to see the full error message
 class Serverless {
+  cli: any
+  configSchemaHandler: any
+  pluginManager: any
+  plugins: any
+  processedInput: any
+  providers: any
+  service: any
+  utils: any
   constructor() {
     this.providers = {}
 
@@ -37,7 +46,9 @@ class Serverless {
     }
 
     this.configSchemaHandler = {
+      // @ts-expect-error TS(2304): Cannot find name 'jest'.
       defineProvider: jest.fn(),
+      // @ts-expect-error TS(2304): Cannot find name 'jest'.
       defineFunctionEvent: jest.fn(),
     }
 

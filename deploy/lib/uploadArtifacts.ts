@@ -1,5 +1,6 @@
 'use strict'
 
+// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable 'fs'.
 const fs = require('fs')
 
 module.exports = {
