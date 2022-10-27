@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["jest"]
   },
   "include": ["."]
 }
