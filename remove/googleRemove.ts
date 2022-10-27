@@ -14,6 +14,7 @@ const removeDeployment = require('./lib/removeDeployment')
 const monitorDeployment = require('../shared/monitorDeployment')
 
 class GoogleRemove {
+  monitorDeployment: any
   serverless: Serverless
   options: Serverless.Options
   provider: Aws
@@ -53,16 +54,20 @@ class GoogleRemove {
     const deploymentName = `sls-${this.serverless.service.service}-${this.options.stage}`
 
     const params = {
-      project: this.serverless.service.provider.project,
+      project: (this.serverless.service.provider as any).project,
       deployment: deploymentName,
     }
 
-    return this.provider
-      .request('deploymentmanager', 'deployments', 'delete', params)
-      .then(() => this.monitorDeployment(deploymentName, 'remove', 5000))
+    return (
+      this.provider
+        // @ts-expect-error TS(2559): Type '{ project: any; deployment: string; }' has n... Remove this comment to see the full error message
+        .request('deploymentmanager', 'deployments', 'delete', params)
+        .then(() => this.monitorDeployment(deploymentName, 'remove', 5000))
+    )
   }
 
   emptyDeploymentBucket() {
+    // @ts-expect-error TS(2769): No overload matches this call.
     return BbPromise.bind(this).then(this.getObjectsToRemove).then(this.removeObjects)
   }
 
@@ -76,6 +81,7 @@ class GoogleRemove {
         bucket: object.bucket,
         object: object.name,
       }
+      // @ts-expect-error TS(2559): Type '{ bucket: any; object: any; }' has no proper... Remove this comment to see the full error message
       return this.provider.request('storage', 'objects', 'delete', params)
     })
 
@@ -87,6 +93,7 @@ class GoogleRemove {
       bucket: (this.serverless.service.provider as unknown as GoogleProviderConfig).deploymentBucketName,
     }
 
+    // @ts-expect-error TS(2559): Type '{ bucket: string; }' has no properties in co... Remove this comment to see the full error message
     const response = await this.provider.request('storage', 'objects', 'list', params)
     if (!response.items || !response.items.length) return BbPromise.resolve([])
 

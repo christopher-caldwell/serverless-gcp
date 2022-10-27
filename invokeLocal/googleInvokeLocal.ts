@@ -9,6 +9,9 @@ const getDataAndContext = require('./lib/getDataAndContext')
 const nodeJs = require('./lib/nodeJs')
 
 class GoogleInvokeLocal {
+  getDataAndContext: any
+  invokeLocalNodeJs: any
+  setDefaults: any
   serverless: Serverless
   options: Serverless.Options
   provider: Aws
@@ -24,7 +27,7 @@ class GoogleInvokeLocal {
 
     this.hooks = {
       initialize: () => {
-        this.options = this.serverless.processedInput.options
+        this.options = (this.serverless as any).processedInput.options
       },
       'before:invoke:local:invoke': async () => {
         await validate(
@@ -45,11 +48,11 @@ class GoogleInvokeLocal {
     ) as unknown as GoogleFunctionDefinition
     validateEventsProperty(functionObj, this.options.function)
 
-    const runtime = this.provider.getRuntime(functionObj)
+    const runtime = (this.provider as any).getRuntime(functionObj)
     if (!runtime.startsWith('nodejs')) {
       throw new Error(`Local invocation with runtime ${runtime} is not supported`)
     }
-    return this.invokeLocalNodeJs(functionObj, this.options.data, this.options.context)
+    return this.invokeLocalNodeJs(functionObj, (this.options as any).data, (this.options as any).context)
   }
 }
 

@@ -209,8 +209,7 @@ export class GoogleProvider extends AwsProvider {
       gs: {
         async resolve({ address }) {
           if (!address) {
-            //@ts-expect-error classes doesn't exist
-            throw new serverless.classes.Error(
+            throw new (serverless as any).classes.Error(
               'Missing address argument in variable "gs" source',
               'GOOGLE_CLOUD_MISSING_GS_VAR ADDRESS',
             )
@@ -238,7 +237,7 @@ export class GoogleProvider extends AwsProvider {
     return this.serverless
       .getProvider('google')
       .request('storage', 'objects', 'get', {
-        //@ts-expect-error bucket doesn't exist
+        // @ts-expect-error TS(2345): Argument of type '{ bucket: string; object: string... Remove this comment to see the full error message
         bucket,
         object,
         alt: 'media',
