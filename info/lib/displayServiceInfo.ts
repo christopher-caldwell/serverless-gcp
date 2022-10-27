@@ -2,11 +2,11 @@
 
 /* eslint no-use-before-define: 0 */
 
-// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable 'chalk'.
+// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'chalk'.
 const chalk = require('chalk')
-// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
+// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
 const BbPromise = require('bluebird')
-// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable '_'.
+// @ts-expect-error TS(2649) FIXME: Cannot augment module '_' with value exports becau... Remove this comment to see the full error message
 const _ = require('lodash')
 
 module.exports = {

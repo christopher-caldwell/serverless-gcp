@@ -60,14 +60,14 @@ class GoogleRemove {
 
     return (
       this.provider
-        // @ts-expect-error TS(2559): Type '{ project: any; deployment: string; }' has n... Remove this comment to see the full error message
+        // @ts-expect-error TS(2559) FIXME: Type '{ project: any; deployment: string; }' has n... Remove this comment to see the full error message
         .request('deploymentmanager', 'deployments', 'delete', params)
         .then(() => this.monitorDeployment(deploymentName, 'remove', 5000))
     )
   }
 
   emptyDeploymentBucket() {
-    // @ts-expect-error TS(2769): No overload matches this call.
+    // @ts-expect-error TS(2769) FIXME: No overload matches this call.
     return BbPromise.bind(this).then(this.getObjectsToRemove).then(this.removeObjects)
   }
 
@@ -81,7 +81,7 @@ class GoogleRemove {
         bucket: object.bucket,
         object: object.name,
       }
-      // @ts-expect-error TS(2559): Type '{ bucket: any; object: any; }' has no proper... Remove this comment to see the full error message
+      // @ts-expect-error TS(2559) FIXME: Type '{ bucket: any; object: any; }' has no proper... Remove this comment to see the full error message
       return this.provider.request('storage', 'objects', 'delete', params)
     })
 
@@ -93,7 +93,7 @@ class GoogleRemove {
       bucket: (this.serverless.service.provider as unknown as GoogleProviderConfig).deploymentBucketName,
     }
 
-    // @ts-expect-error TS(2559): Type '{ bucket: string; }' has no properties in co... Remove this comment to see the full error message
+    // @ts-expect-error TS(2559) FIXME: Type '{ bucket: string; }' has no properties in co... Remove this comment to see the full error message
     const response = await this.provider.request('storage', 'objects', 'list', params)
     if (!response.items || !response.items.length) return BbPromise.resolve([])
 

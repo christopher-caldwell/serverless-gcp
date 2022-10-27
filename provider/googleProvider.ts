@@ -237,7 +237,7 @@ export class GoogleProvider extends AwsProvider {
     return this.serverless
       .getProvider('google')
       .request('storage', 'objects', 'get', {
-        // @ts-expect-error TS(2345): Argument of type '{ bucket: string; object: string... Remove this comment to see the full error message
+        // @ts-expect-error TS(2345) FIXME: Argument of type '{ bucket: string; object: string... Remove this comment to see the full error message
         bucket,
         object,
         alt: 'media',

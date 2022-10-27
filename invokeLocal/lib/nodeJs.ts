@@ -1,10 +1,10 @@
 'use strict'
 
-// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable 'chalk'.
+// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'chalk'.
 const chalk = require('chalk')
-// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable 'path'.
+// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'path'.
 const path = require('path')
-// @ts-expect-error TS(2451): Cannot redeclare block-scoped variable '_'.
+// @ts-expect-error TS(2649) FIXME: Cannot augment module '_' with value exports becau... Remove this comment to see the full error message
 const _ = require('lodash')
 const { getReqRes } = require('./httpReqRes')
 
@@ -92,7 +92,7 @@ module.exports = {
           } else if (result) {
             handleResult.call(this, result)
           }
-          // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
+          // @ts-expect-error TS(2794) FIXME: Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
           resolve()
         }
       }
@@ -137,7 +137,7 @@ module.exports = {
             4,
           ),
         )
-        // @ts-expect-error TS(2794): Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
+        // @ts-expect-error TS(2794) FIXME: Expected 1 arguments, but got 0. Did you forget to... Remove this comment to see the full error message
         resolve()
       }
 
