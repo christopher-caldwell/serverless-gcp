@@ -18,9 +18,9 @@ const GoogleInfo = require('./info/googleInfo')
 
 class GoogleIndex {
   serverless: Serverless
-  options: unknown[]
+  options: Serverless.Options
 
-  constructor(serverless: Serverless, options) {
+  constructor(serverless: Serverless, options: Serverless.Options) {
     this.serverless = serverless
     this.options = options
 

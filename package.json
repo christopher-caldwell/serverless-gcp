@@ -36,6 +36,7 @@
     "@types/jest": "^29.2.0",
     "@types/lodash": "^4.14.186",
     "@types/serverless": "^3.12.8",
+    "@types/sinon": "^10.0.13",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
     "coveralls": "^3.1.1",

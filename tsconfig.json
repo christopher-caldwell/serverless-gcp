@@ -3,7 +3,8 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "types": ["jest"]
+    "types": ["jest"],
+    "baseUrl": "./src"
   },
-  "include": ["."]
+  "include": ["./"]
 }

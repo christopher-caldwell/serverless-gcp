@@ -5,8 +5,7 @@ const sinon = require('sinon')
 // @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
 const BbPromise = require('bluebird')
 
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'GoogleProv... Remove this comment to see the full error message
-const GoogleProvider = require('../../provider/googleProvider')
+import { GoogleProvider } from '../../provider/googleProvider'
 // @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'GoogleDepl... Remove this comment to see the full error message
 const GoogleDeploy = require('../googleDeploy')
 // @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'Serverless... Remove this comment to see the full error message

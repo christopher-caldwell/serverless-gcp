@@ -1,29 +1,36 @@
 'use strict'
 
-/* eslint no-use-before-define: 0 */
+import BbPromise from 'bluebird'
+import async from 'async'
+import Serverless from 'serverless'
+import Aws from 'serverless/aws'
+import { GoogleProviderConfig } from '../provider/googleProvider'
 
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
-const BbPromise = require('bluebird')
-const async = require('async')
+export const monitorDeployment = (
+  deploymentName: string,
+  action: string,
+  frequency: number,
+  serverless: Serverless,
+  provider: Aws,
+) => {
+  const validStatuses = ['DONE']
 
-module.exports = {
-  monitorDeployment(deploymentName, action, frequency) {
-    const validStatuses = ['DONE']
+  let deploymentStatus = null
 
-    let deploymentStatus = null
+  serverless.cli.log(`Checking deployment ${action} progress...`)
 
-    this.serverless.cli.log(`Checking deployment ${action} progress...`)
+  return new BbPromise((resolve, reject) => {
+    async.whilst(
+      () => validStatuses.indexOf(deploymentStatus) === -1,
 
-    return new BbPromise((resolve, reject) => {
-      async.whilst(
-        () => validStatuses.indexOf(deploymentStatus) === -1,
-
-        (callback) => {
-          setTimeout(() => {
-            const params = {
-              project: this.serverless.service.provider.project,
-            }
-            return this.provider
+      (callback) => {
+        setTimeout(() => {
+          const params = {
+            project: (serverless.service.provider as unknown as GoogleProviderConfig).project,
+          }
+          return (
+            provider
+              // @ts-expect-error params doesn't find the shape of AWS
               .request('deploymentmanager', 'deployments', 'list', params)
               .then((response) => {
                 // if actions is "remove" and no deployments are left set to "DONE"
@@ -44,24 +51,26 @@ module.exports = {
 
                 deploymentStatus = deployment.operation.status
 
-                this.serverless.cli.printDot()
+                // @ts-expect-error printDot doesn't exist
+                serverless.cli.printDot()
                 return callback()
               })
               .catch((error) => {
                 reject(error)
               })
-          }, frequency)
-        },
+          )
+        }, frequency)
+      },
 
-        () => {
-          // empty console.log for a prettier output
-          this.serverless.cli.consoleLog('')
-          this.serverless.cli.log('Done...')
-          resolve(deploymentStatus)
-        },
-      )
-    })
-  },
+      () => {
+        // empty console.log for a prettier output
+        // serverless.cli.consconoleLog('')
+        serverless.cli.log('')
+        serverless.cli.log('Done...')
+        resolve(deploymentStatus)
+      },
+    )
+  })
 }
 
 const throwErrorIfDeploymentFails = (deployment) => {

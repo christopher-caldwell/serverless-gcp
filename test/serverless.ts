@@ -1,14 +1,13 @@
 'use strict'
 
 // mock of the serverless instance
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'Serverless... Remove this comment to see the full error message
-class Serverless {
+export class Serverless {
   cli: any
   configSchemaHandler: any
   pluginManager: any
   plugins: any
   processedInput: any
-  providers: any
+  providers: Record<string, any>
   service: any
   utils: any
   constructor() {
@@ -53,13 +52,11 @@ class Serverless {
     this.processedInput = {}
   }
 
-  setProvider(name, provider) {
+  setProvider(name: string, provider) {
     this.providers[name] = provider
   }
 
-  getProvider(name) {
+  getProvider(name: string) {
     return this.providers[name]
   }
 }
-
-module.exports = Serverless

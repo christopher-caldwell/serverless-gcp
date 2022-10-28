@@ -10,8 +10,7 @@ const utils = require('../shared/utils')
 const createDeployment = require('./lib/createDeployment')
 // @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'setDeploym... Remove this comment to see the full error message
 const setDeploymentBucketName = require('../shared/setDeploymentBucketName')
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'monitorDep... Remove this comment to see the full error message
-const monitorDeployment = require('../shared/monitorDeployment')
+import { monitorDeployment } from '../shared/monitorDeployment'
 const uploadArtifacts = require('./lib/uploadArtifacts')
 const updateDeployment = require('./lib/updateDeployment')
 const cleanupDeploymentBucket = require('./lib/cleanupDeploymentBucket')

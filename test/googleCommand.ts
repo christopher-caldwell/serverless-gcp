@@ -1,13 +1,17 @@
 'use strict'
 
-// mock to test functionality in a command unrelated matter
-// this mean that not e.g. googleDeploy but the more abstract googleCommand can be used
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'GoogleComm... Remove this comment to see the full error message
-class GoogleCommand {
+import Serverless from 'serverless'
+import Aws from 'serverless/aws'
+
+/**
+ * mock to test functionality in a command unrelated matter
+ * this mean that not e.g. googleDeploy but the more abstract googleCommand can be used
+ */
+export class GoogleCommand {
   options: any
-  provider: any
-  serverless: any
-  constructor(serverless, options, testSubject) {
+  provider: Aws
+  serverless: Serverless
+  constructor(serverless: Serverless, options: Serverless.Options, testSubject) {
     this.options = options
     this.serverless = serverless
     this.provider = this.serverless.getProvider('google')
@@ -15,5 +19,3 @@ class GoogleCommand {
     Object.assign(this, testSubject)
   }
 }
-
-module.exports = GoogleCommand

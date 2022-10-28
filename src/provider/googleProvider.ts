@@ -37,7 +37,7 @@ export class GoogleProvider extends AwsProvider {
     return constants.providerName
   }
 
-  constructor(serverless: Serverless, options: Serverless.Options) {
+  constructor(serverless: Serverless, options?: Serverless.Options) {
     super(serverless, options)
     this.serverless = serverless
     // This adds `credentials` to the provider type
