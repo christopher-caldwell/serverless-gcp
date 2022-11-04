@@ -1,8 +1,8 @@
 import path from 'path'
 import os from 'os'
-import type Serverless from 'serverless'
-import type AwsProvider from 'serverless/aws'
-import Plugin from 'serverless/classes/Plugin'
+import type Serverless from '@/@types/serverless'
+import type AwsProvider from '@/@types/serverless/aws'
+import Plugin from '@/@types/serverless/classes/Plugin'
 import _ from 'lodash'
 import { google, deploymentmanager_v2, storage_v1beta2, logging_v2, cloudfunctions_v1 } from 'googleapis'
 import googleApisPackageJson from 'googleapis/package.json'
@@ -177,11 +177,11 @@ export class GoogleProvider implements Plugin {
   }
 
   getRuntime(funcObject: Serverless.FunctionDefinition) {
-    return _.get(funcObject, 'runtime') || _.get(this, 'serverless.service.provider.runtime') || 'nodejs10'
+    return _.get(funcObject, 'runtime') || _.get(this, '@/@types/serverless.service.provider.runtime') || 'nodejs10'
   }
 
   getConfiguredSecrets(funcObject: { secrets: string }) {
-    const providerSecrets = _.get(this, 'serverless.service.provider.secrets', {})
+    const providerSecrets = _.get(this, '@/@types/serverless.service.provider.secrets', {})
     const secrets = _.merge({}, providerSecrets, funcObject.secrets)
 
     const keys = Object.keys(secrets).sort()
@@ -194,6 +194,6 @@ export class GoogleProvider implements Plugin {
   }
 
   getConfiguredEnvironment(funcObject) {
-    return _.merge({}, _.get(this, 'serverless.service.provider.environment'), funcObject.environment)
+    return _.merge({}, _.get(this, '@/@types/serverless.service.provider.environment'), funcObject.environment)
   }
 }

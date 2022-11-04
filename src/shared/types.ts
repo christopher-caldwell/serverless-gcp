@@ -1,4 +1,4 @@
-import type AwsProvider from 'serverless/aws'
+import type AwsProvider from '@/@types/serverless/aws'
 
 //TODO: autogenerate these types
 

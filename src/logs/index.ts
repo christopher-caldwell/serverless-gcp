@@ -1,6 +1,6 @@
-import Serverless from 'serverless'
-import Aws from 'serverless/aws'
-import Plugin, { Commands, Hooks } from 'serverless/classes/Plugin'
+import Serverless from '@/@types/serverless'
+import Aws from '@/@types/serverless/aws'
+import Plugin, { Commands, Hooks } from '@/@types/serverless/classes/Plugin'
 
 import { constants } from '../provider'
 import { validateAndSetDefaults } from '../shared'

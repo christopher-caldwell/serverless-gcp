@@ -1,5 +1,5 @@
-import type Serverless from 'serverless'
-import Plugin, { Hooks } from 'serverless/classes/plugin'
+import type Serverless from '@/@types/serverless'
+import Plugin, { Hooks } from '@/@types/serverless/classes/plugin'
 
 import { GoogleProvider } from './provider'
 import { GooglePackage } from './package'

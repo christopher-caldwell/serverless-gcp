@@ -2,7 +2,7 @@ import Service = require('./classes/Service')
 import PluginManager = require('./classes/PluginManager')
 import Utils = require('./classes/Utils')
 import YamlParser = require('./classes/YamlParser')
-import AwsProvider = require('./plugins/aws/provider/awsProvider')
+import AwsProvider = require('./aws')
 
 declare namespace Serverless {
   interface Options {
