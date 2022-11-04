@@ -4,7 +4,7 @@ import BbPromise from 'bluebird'
 
 import { GooglePackage } from '..'
 import { validateEventsProperty } from '../../shared'
-import { GoogleFunctionDefinition, GoogleMemory, GoogleRegion, GoogleRuntime } from '../../provider'
+import { GoogleFunctionDefinition, GoogleMemory, GoogleRegion, GoogleRuntime } from '../../shared/types'
 
 export function compileFunctions(this: GooglePackage) {
   const artifactFilePath = this.serverless.service.package.artifact

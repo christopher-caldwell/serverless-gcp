@@ -2,7 +2,7 @@ import chalk from 'chalk'
 
 import Serverless from 'serverless'
 import { GoogleLogs } from '../'
-import { GoogleProviderConfig, GoogleServerlessConfig } from '../../provider'
+import { GoogleProviderConfig, GoogleServerlessConfig } from '../../shared/types'
 
 export const retrieveLogs = async function (this: GoogleLogs) {
   const logs = await this.getLogs()

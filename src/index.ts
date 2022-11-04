@@ -5,7 +5,7 @@ import { GoogleProvider } from './provider'
 import { GooglePackage } from './package'
 import { GoogleDeploy } from './deploy'
 import { GoogleRemove } from './remove'
-// const GoogleInvoke = require('./invoke/googleInvoke')
+// import { GoogleInvoke } from './invoke'
 import { GoogleInvokeLocal } from './invoke-local'
 import { GoogleLogs } from './logs'
 import { GoogleInfo } from './info'

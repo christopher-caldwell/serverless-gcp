@@ -1,57 +1,58 @@
-'use strict'
+import chalk from 'chalk'
 
-/* eslint no-use-before-define: 0 */
+import { GoogleInvoke } from '..'
+import { GoogleServerlessConfig } from '../../shared/types'
 
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
-const BbPromise = require('bluebird')
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'chalk'.
-const chalk = require('chalk')
+export const invokeFunction = async function (this: GoogleInvoke) {
+  const result = await this.invoke()
+  this.printResult(result)
+}
 
-module.exports = {
-  invokeFunction() {
-    return BbPromise.bind(this).then(this.invoke).then(this.printResult)
-  },
+export const invoke = function (this: GoogleInvoke) {
+  //@ts-expect-error project is not on AWS
+  const project = this.serverless.service.provider.project
+  const region = this.options.region
+  let func = this.options.function
+  //@ts-expect-error data is not on options
+  const data = this.options.data || ''
 
-  invoke() {
-    const project = this.serverless.service.provider.project
-    const region = this.options.region
-    let func = this.options.function
-    const data = this.options.data || ''
+  const functions = this.serverless.service.functions as unknown as GoogleServerlessConfig['functions']
+  func = getGoogleCloudFunctionName(functions, func)
 
-    func = getGoogleCloudFunctionName(this.serverless.service.functions, func)
+  const params = {
+    name: `projects/${project}/locations/${region}/functions/${func}`,
+    resource: {
+      data,
+    },
+  }
 
-    const params = {
-      name: `projects/${project}/locations/${region}/functions/${func}`,
-      resource: {
-        data,
-      },
+  //@ts-expect-error params call signature
+  return this.provider.request('cloudfunctions', 'projects', 'locations', 'functions', 'call', params)
+}
+
+export interface Result {
+  executionId: string
+  result: string
+}
+export const printResult = function (this: GoogleInvoke, result: Result) {
+  let res = result
+
+  if (!result || !result.result) {
+    res = {
+      executionId: 'error',
+      result: 'An error occurred while executing your function...',
     }
+  }
 
-    return this.provider.request('cloudfunctions', 'projects', 'locations', 'functions', 'call', params)
-  },
+  const log = `${chalk.grey(res.executionId)} ${res.result}`
 
-  printResult(result) {
-    let res = result
-
-    if (!result || !result.result) {
-      res = {
-        executionId: 'error',
-        result: 'An error occurred while executing your function...',
-      }
-    }
-
-    const log = `${chalk.grey(res.executionId)} ${res.result}`
-
-    this.serverless.cli.log(log)
-
-    return BbPromise.resolve()
-  },
+  this.serverless.cli.log(log)
 }
 
 // retrieve the functions name (Google uses our handler property as the function name)
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'getGoogleC... Remove this comment to see the full error message
-const getGoogleCloudFunctionName = (serviceFunctions, func) => {
-  if (!serviceFunctions[func]) {
+const getGoogleCloudFunctionName = (serviceFunctions: GoogleServerlessConfig['functions'], func: string) => {
+  const targetFunction = serviceFunctions[func]
+  if (!targetFunction) {
     const errorMessage = [
       `Function "${func}" not found. `,
       'Please check your "serverless.yml" file for the correct function name.',
@@ -59,5 +60,5 @@ const getGoogleCloudFunctionName = (serviceFunctions, func) => {
     throw new Error(errorMessage)
   }
 
-  return serviceFunctions[func].name
+  return targetFunction.name
 }

@@ -1,12 +1,9 @@
-'use strict'
-
-import BbPromise from 'bluebird'
 import Serverless from 'serverless'
 import Aws from 'serverless/aws'
 import { Hooks } from 'serverless/classes/plugin'
 
-import { monitorDeployment, setDefaults, setDeploymentBucketName } from '../shared'
-import { constants, GoogleProviderConfig } from '../provider'
+import { monitorDeployment, validateAndSetDefaults, setDeploymentBucketName } from '../shared'
+import { constants } from '../provider'
 import {
   uploadArtifacts,
   update,
@@ -23,7 +20,7 @@ export class GoogleDeploy {
   options: Serverless.Options
   provider: Aws
   serverless: Serverless
-  setDefaults: () => void
+  validateAndSetDefaults: () => void
   setDeploymentBucketName: () => void
   updateDeployment: () => Promise<void>
   uploadArtifacts: () => Promise<void>
@@ -42,7 +39,7 @@ export class GoogleDeploy {
     this.options = options
     this.provider = this.serverless.getProvider(constants.providerName)
 
-    this.setDefaults = setDefaults.bind(this)
+    this.validateAndSetDefaults = validateAndSetDefaults.bind(this)
     this.setDeploymentBucketName = setDeploymentBucketName.bind(this)
     this.uploadArtifacts = uploadArtifacts.bind(this)
     this.monitorDeployment = monitorDeployment.bind(this)
@@ -55,8 +52,7 @@ export class GoogleDeploy {
 
     this.hooks = {
       'before:deploy:deploy': async () => {
-        await validate(this.serverless.config.servicePath, this.serverless.service.service)
-        this.setDefaults()
+        this.validateAndSetDefaults()
       },
       'deploy:deploy': async () => {
         await this.createDeployment()

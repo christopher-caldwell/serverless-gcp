@@ -1,7 +1,7 @@
 'use strict'
 
 import async from 'async'
-import { GoogleProviderConfig } from '../provider'
+import { GoogleProviderConfig } from '../shared/types'
 import { _Plugin } from './utils'
 
 export const monitorDeployment = function (this: _Plugin, deploymentName: string, action: string, frequency: number) {

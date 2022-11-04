@@ -3,9 +3,10 @@ import Aws from 'serverless/aws'
 import Plugin from 'serverless/classes/Plugin'
 import _ from 'lodash'
 
-import { constants, GoogleFunctionDefinition, GoogleServerlessConfig } from '../provider'
+import { constants } from '../provider'
+import { GoogleFunctionDefinition } from '../shared/types'
 
-import { validateEventsProperty, validate, setDefaults } from '../shared'
+import { validateEventsProperty, validateAndSetDefaults } from '../shared'
 import {
   getDataAndContext,
   loadFileInOption,
@@ -21,7 +22,7 @@ export class GoogleInvokeLocal implements Plugin {
   options: Serverless.Options
   provider: Aws
   hooks: Plugin.Hooks
-  setDefaults: () => void
+  validateAndSetDefaults: () => void
   getDataAndContext: () => Promise<void>
   loadFileInOption: (filePath: string, optionKey: string) => Promise<void>
   invokeLocalNodeJs: (
@@ -39,7 +40,7 @@ export class GoogleInvokeLocal implements Plugin {
     this.options = options
 
     this.provider = this.serverless.getProvider(constants.providerName)
-    this.setDefaults = setDefaults.bind(this)
+    this.validateAndSetDefaults = validateAndSetDefaults.bind(this)
     this.getDataAndContext = getDataAndContext.bind(this)
     this.loadFileInOption = loadFileInOption.bind(this)
     this.invokeLocalNodeJs = invokeLocalNodeJs.bind(this)
@@ -54,8 +55,7 @@ export class GoogleInvokeLocal implements Plugin {
         this.options = this.serverless.processedInput.options
       },
       'before:invoke:local:invoke': async () => {
-        await validate(this.serverless.config.servicePath, this.serverless.service.service)
-        this.setDefaults()
+        this.validateAndSetDefaults()
         await this.getDataAndContext()
       },
       'invoke:local:invoke': () => this.invokeLocal(),

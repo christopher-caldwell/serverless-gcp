@@ -1,21 +1,22 @@
-'use strict'
-
 import path from 'path'
 import os from 'os'
 import type Serverless from 'serverless'
 import type AwsProvider from 'serverless/aws'
 import Plugin from 'serverless/classes/Plugin'
-
 import _ from 'lodash'
 import { google, deploymentmanager_v2, storage_v1beta2, logging_v2, cloudfunctions_v1 } from 'googleapis'
-
 import googleApisPackageJson from 'googleapis/package.json'
 
+import { GoogleProviderConfig } from '../shared/types'
+import { schema } from './lib'
+
 export const constants = {
+  /** Provider name cannot be `google` as many plugins have custom logic around Google as a provider. */
   providerName: '_google',
 }
 
-export class GoogleProvider {
+// TODO: Figure out how to type `provider` in the other plugins as this class
+export class GoogleProvider implements Plugin {
   serverless: Serverless
   provider: GoogleProvider
   sdk: {
@@ -42,148 +43,7 @@ export class GoogleProvider {
     this.googleProvider = this.serverless.service.provider as unknown as GoogleProviderConfig
     this.provider = this // only load plugin in a Google service context
     this.serverless.setProvider(constants.providerName, this as unknown as AwsProvider)
-    this.serverless.configSchemaHandler.defineProvider(constants.providerName, {
-      definitions: {
-        cloudFunctionRegion: {
-          // Source: https://cloud.google.com/functions/docs/locations
-          enum: [
-            // Tier pricing 1
-            'us-central1', // (Iowa)
-            'us-east1', // (South Carolina)
-            'us-east4', // (Northern Virginia)
-            'europe-west1', // (Belgium)
-            'europe-west2', // (London)
-            'asia-east1', // (Taiwan)
-            'asia-east2', // (Hong Kong)
-            'asia-northeast1', // (Tokyo)
-            'asia-northeast2', // (Osaka)
-            // Tier pricing 2
-            'us-west2', // (Los Angeles)
-            'us-west3', // (Salt Lake City)
-            'us-west4', // (Las Vegas)
-            'northamerica-northeast1', // (Montreal)
-            'southamerica-east1', // (Sao Paulo)
-            'europe-west3', // (Frankfurt)
-            'europe-west6', // (Zurich)
-            'europe-central2', // (Warsaw)
-            'australia-southeast1', // (Sydney)
-            'asia-south1', // (Mumbai)
-            'asia-southeast1', // (Singapore)
-            'asia-southeast2', // (Jakarta)
-            'asia-northeast3', // (Seoul)
-          ],
-        },
-        cloudFunctionRuntime: {
-          // Source: https://cloud.google.com/functions/docs/concepts/exec#runtimes
-          enum: [
-            'nodejs6', // decommissioned
-            'nodejs8', // deprecated
-            'nodejs10',
-            'nodejs12',
-            'nodejs14',
-            'nodejs16', // recommended
-            'python37',
-            'python38',
-            'python39',
-            'go111',
-            'go113',
-            'go116', // recommended
-            'java11',
-            'dotnet3',
-            'ruby26',
-            'ruby27',
-          ],
-        },
-        cloudFunctionMemory: {
-          // Source: https://cloud.google.com/functions/docs/concepts/exec#memory
-          enum: [
-            128,
-            256, // default
-            512,
-            1024,
-            2048,
-            4096,
-          ],
-        },
-        cloudFunctionEnvironmentVariables: {
-          type: 'object',
-          patternProperties: {
-            '^.*$': { type: 'string' },
-          },
-          additionalProperties: false,
-        },
-        cloudFunctionSecretEnvironmentVariables: {
-          type: 'object',
-          patternProperties: {
-            '^[a-zA-Z0-9_]+$': {
-              type: 'object',
-              properties: {
-                projectId: {
-                  type: 'string',
-                  minLength: 1,
-                },
-                secret: {
-                  type: 'string',
-                  pattern: '^[a-zA-Z0-9_-]+$',
-                },
-                version: {
-                  type: 'string',
-                  pattern: '^(latest|[0-9.]+)$',
-                },
-              },
-              required: ['secret', 'version'],
-            },
-          },
-        },
-        cloudFunctionVpcEgress: {
-          enum: ['ALL', 'ALL_TRAFFIC', 'PRIVATE', 'PRIVATE_RANGES_ONLY'],
-        },
-        resourceManagerLabels: {
-          type: 'object',
-          propertyNames: {
-            type: 'string',
-            minLength: 1,
-            maxLength: 63,
-          },
-          patternProperties: {
-            '^[a-z][a-z0-9_.]*$': { type: 'string' },
-          },
-          additionalProperties: false,
-        },
-      },
-
-      provider: {
-        properties: {
-          credentials: { type: 'string' },
-          project: { type: 'string' },
-          region: { $ref: '#/definitions/cloudFunctionRegion' },
-          runtime: { $ref: '#/definitions/cloudFunctionRuntime' }, // Can be overridden by function configuration
-          serviceAccountEmail: { type: 'string' }, // Can be overridden by function configuration
-          memorySize: { $ref: '#/definitions/cloudFunctionMemory' }, // Can be overridden by function configuration
-          timeout: { type: 'string' }, // Can be overridden by function configuration
-          environment: { $ref: '#/definitions/cloudFunctionEnvironmentVariables' }, // Can be overridden by function configuration
-          secrets: { $ref: '#/definitions/cloudFunctionSecretEnvironmentVariables' }, // Can be overridden by function configuration
-          vpc: { type: 'string' }, // Can be overridden by function configuration
-          vpcEgress: { $ref: '#/definitions/cloudFunctionVpcEgress' }, // Can be overridden by function configuration
-          labels: { $ref: '#/definitions/resourceManagerLabels' }, // Can be overridden by function configuration
-        },
-      },
-      function: {
-        properties: {
-          handler: { type: 'string' },
-          runtime: { $ref: '#/definitions/cloudFunctionRuntime' }, // Override provider configuration
-          serviceAccountEmail: { type: 'string' }, // Override provider configuration
-          memorySize: { $ref: '#/definitions/cloudFunctionMemory' }, // Override provider configuration
-          timeout: { type: 'string' }, // Override provider configuration
-          minInstances: { type: 'number' },
-          environment: { $ref: '#/definitions/cloudFunctionEnvironmentVariables' }, // Override provider configuration
-          secrets: { $ref: '#/definitions/cloudFunctionSecretEnvironmentVariables' }, // Can be overridden by function configuration
-          vpc: { type: 'string' }, // Override provider configuration
-          vpcEgress: { $ref: '#/definitions/cloudFunctionVpcEgress' }, // Can be overridden by function configuration
-          labels: { $ref: '#/definitions/resourceManagerLabels' }, // Override provider configuration
-        },
-      },
-    })
+    this.serverless.configSchemaHandler.defineProvider(constants.providerName, schema)
 
     const serverlessVersion = this.serverless.version
     const googleApisVersion = googleApisPackageJson.version
@@ -244,11 +104,12 @@ export class GoogleProvider {
       })
   }
 
-  request() {
+  async request() {
     // grab necessary stuff from arguments array
-    const lastArg = arguments[Object.keys(arguments).pop()] //eslint-disable-line
+    //TODO: fix this lazy non-sense
+    const lastArg = arguments[Object.keys(arguments).pop()]
     const hasParams = typeof lastArg === 'object'
-    const filArgs = _.filter(arguments, (v) => typeof v === 'string') //eslint-disable-line
+    const filArgs = _.filter(arguments, (v) => typeof v === 'string')
     const params = hasParams ? lastArg : {}
 
     const service = filArgs[0]
@@ -256,32 +117,31 @@ export class GoogleProvider {
     this.isServiceSupported(service)
 
     const authClient = this.getAuthClient()
+    await authClient.getClient()
 
-    return authClient.getClient().then(() => {
-      const requestParams = { auth: authClient }
+    const requestParams = { auth: authClient }
 
-      // merge the params from the request call into the base functionParams
-      _.merge(requestParams, params)
+    // merge the params from the request call into the base functionParams
+    _.merge(requestParams, params)
 
-      return filArgs
-        .reduce((p, c) => p[c], this.sdk)
-        .bind(serviceInstance)(requestParams)
-        .then((result) => result.data)
-        .catch((error) => {
-          if (
-            error &&
-            error.errors &&
-            error.errors[0].message &&
-            _.includes(error.errors[0].message, 'project 1043443644444')
-          ) {
-            throw new Error(
-              "Incorrect configuration. Please change the 'project' key in the 'provider' block in your Serverless config file.",
-            )
-          } else if (error) {
-            throw error
-          }
-        })
-    })
+    return filArgs
+      .reduce((p, c) => p[c], this.sdk)
+      .bind(serviceInstance)(requestParams)
+      .then((result) => result.data)
+      .catch((error) => {
+        if (
+          error &&
+          error.errors &&
+          error.errors[0].message &&
+          _.includes(error.errors[0].message, 'project 1043443644444')
+        ) {
+          throw new Error(
+            "Incorrect configuration. Please change the 'project' key in the 'provider' block in your Serverless config file.",
+          )
+        } else if (error) {
+          throw error
+        }
+      })
   }
 
   getAuthClient() {
@@ -336,127 +196,4 @@ export class GoogleProvider {
   getConfiguredEnvironment(funcObject) {
     return _.merge({}, _.get(this, 'serverless.service.provider.environment'), funcObject.environment)
   }
-}
-
-/** @source: https://cloud.google.com/functions/docs/locations */
-export type GoogleRegion =
-  | 'us-central1' // (Iowa)
-  | 'us-east1' // (South Carolina)
-  | 'us-east4' // (Northern Virginia)
-  | 'europe-west1' // (Belgium)
-  | 'europe-west2' // (London)
-  | 'asia-east1' // (Taiwan)
-  | 'asia-east2' // (Hong Kong)
-  | 'asia-northeast1' // (Tokyo)
-  | 'asia-northeast2' // (Osaka)
-  | 'us-west2' // (Los Angeles)
-  | 'us-west3' // (Salt Lake City)
-  | 'us-west4' // (Las Vegas)
-  | 'northamerica-northeast1' // (Montreal)
-  | 'southamerica-east1' // (Sao Paulo)
-  | 'europe-west3' // (Frankfurt)
-  | 'europe-west6' // (Zurich)
-  | 'europe-central2' // (Warsaw)
-  | 'australia-southeast1' // (Sydney)
-  | 'asia-south1' // (Mumbai)
-  | 'asia-southeast1' // (Singapore)
-  | 'asia-southeast2' // (Jakarta)
-  | 'asia-northeast3' // (Seoul)
-
-/** @source: https://cloud.google.com/functions/docs/concepts/exec#runtimes */
-export type GoogleRuntime =
-  | 'nodejs6'
-  | 'nodejs8'
-  | 'nodejs10'
-  | 'nodejs12'
-  | 'nodejs14'
-  | 'nodejs16'
-  // TODO: This is why this isn't working. Need to create a map lookup for matching the AWS run times to the GCP ones.
-  | 'nodejs16.x'
-  | 'python37'
-  | 'python38'
-  | 'python39'
-  | 'go111'
-  | 'go113'
-  | 'go116'
-  | 'java11'
-  | 'dotnet3'
-  | 'ruby26'
-  | 'ruby27'
-
-/** @source: https://cloud.google.com/functions/docs/concepts/exec#memory  */
-export type GoogleMemory = 128 | 256 | 512 | 1024 | 2048 | 4096
-
-export type GoogleEnvironmentVariables = Record<string, string>
-export type GoogleSecretEnvironmentVariables = {
-  projectId?: string
-  secret: string
-  version: string
-}
-export type GoogleVpcEgress = 'ALL' | 'ALL_TRAFFIC' | 'PRIVATE' | 'PRIVATE_RANGES_ONLY'
-export type GoogleResourceManagerLabels = Record<string, string>
-export interface SharedProperties {
-  region?: GoogleRegion
-  /** Can be overridden by function configuration
-   * @default nodejs10
-   */
-  runtime?: GoogleRuntime
-  /** Can be overridden by function configuration
-   * @default 256
-   */
-  memorySize?: GoogleMemory
-  /** Can be overridden by function configuration. JSON schema says `string`, but Serverless types say `number` */
-  timeout?: string
-  /** Can be overridden by function configuration */
-  environment?: GoogleEnvironmentVariables
-  /** Can be overridden by function configuration */
-  secrets?: GoogleSecretEnvironmentVariables
-  /** Can be overridden by function configuration */
-  vpc?: string
-  /** Can be overridden by function configuration */
-  vpcEgress?: GoogleVpcEgress
-  /** Can be overridden by function configuration */
-  labels?: GoogleResourceManagerLabels
-  serviceAccountEmail?: string
-}
-export interface GoogleProviderConfig extends SharedProperties {
-  /** Not required if using the default login */
-  credentials?: string
-  /** The Google **ID** of your target project */
-  project: string
-  name: '_google'
-  // Not sure if this is valid in G, exists on base AWS
-  stackTags?: { [key: string]: any }
-  deploymentBucketName?: string
-  stage: string
-}
-export interface GoogleFunctionDefinition extends SharedProperties {
-  /** Name of exported function to be ran by the CloudFunction. Cannot include `/` or `.` and must be a sibling to this file.
-   * @nodejs Must also be `index.js`, `function.js`, or you can use the `main` key in a sibling level package.json to use subdirectory code. */
-  handler: string
-  name?: string
-  minInstances?: number
-  maxInstances?: number
-  events: Array<{ event?: any; http?: any }>
-}
-
-export interface GoogleServerlessConfig {
-  service: string
-  // service: Service
-  useDotenv?: boolean
-  frameworkVersion?: string
-  enableLocalInstallationFallback?: boolean
-  variablesResolutionMode?: '20210219' | '20210326'
-  unresolvedVariablesNotificationMode?: 'warn' | 'error'
-  deprecationNotificationMode?: 'warn' | 'warn:summary' | 'error'
-  disabledDeprecations?: string[]
-  configValidationMode?: 'warn' | 'error' | 'off'
-  provider: GoogleProviderConfig
-  package?: AwsProvider.Package
-  functions?: Record<string, GoogleFunctionDefinition>
-  resources?: any
-  plugins?: string[]
-  app?: string
-  tenant?: string
-  custom?: Record<string, any>
 }

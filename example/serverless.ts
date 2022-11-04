@@ -1,4 +1,4 @@
-import { GoogleServerlessConfig } from '../src/provider'
+import type { GoogleServerlessConfig } from '../src/shared/types'
 import type { Configuration as EsBuildConfig } from './serverless.esbuild'
 
 const esBuildConfig: Partial<EsBuildConfig> = {

@@ -1,38 +1,37 @@
-'use strict'
+import { GoogleRemove } from '..'
+import { ObjectToRemove } from '../../deploy/lib'
 
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
-const BbPromise = require('bluebird')
+export const emptyDeploymentBucket = async function (this: GoogleRemove) {
+  const objects = await this.getObjectsToRemove()
+  return this.removeObjects(objects)
+}
 
-module.exports = {
-  emptyDeploymentBucket() {
-    return BbPromise.bind(this).then(this.getObjectsToRemove).then(this.removeObjects)
-  },
+export const getObjectsToRemove = async function (this: GoogleRemove) {
+  const params = {
+    //@ts-expect-error deploymentBucketName not on AWS
+    bucket: this.serverless.service.provider.deploymentBucketName,
+  }
 
-  getObjectsToRemove() {
+  //@ts-expect-error params signature
+  const response = await this.provider.request('storage', 'objects', 'list', params)
+  if (!response.items || !response.items.length) return []
+
+  return response.items
+}
+
+export const removeObjects = function (this: GoogleRemove, objectsToRemove: ObjectToRemove[]) {
+  if (!objectsToRemove.length) return
+
+  this.serverless.cli.log('Removing artifacts in deployment bucket...')
+
+  const removePromises = objectsToRemove.map((object) => {
     const params = {
-      bucket: this.serverless.service.provider.deploymentBucketName,
+      bucket: object.bucket,
+      object: object.name,
     }
+    //@ts-expect-error params signature
+    return this.provider.request('storage', 'objects', 'delete', params)
+  })
 
-    return this.provider.request('storage', 'objects', 'list', params).then((response) => {
-      if (!response.items || !response.items.length) return BbPromise.resolve([])
-
-      return BbPromise.resolve(response.items)
-    })
-  },
-
-  removeObjects(objectsToRemove) {
-    if (!objectsToRemove.length) return BbPromise.resolve()
-
-    this.serverless.cli.log('Removing artifacts in deployment bucket...')
-
-    const removePromises = objectsToRemove.map((object) => {
-      const params = {
-        bucket: object.bucket,
-        object: object.name,
-      }
-      return this.provider.request('storage', 'objects', 'delete', params)
-    })
-
-    return BbPromise.all(removePromises)
-  },
+  return Promise.all(removePromises)
 }

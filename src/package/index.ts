@@ -14,7 +14,7 @@ import {
   generateArtifactDirectoryName,
 } from './lib'
 
-import { validate, setDefaults, setDeploymentBucketName } from '../shared'
+import { validateAndSetDefaults, setDeploymentBucketName } from '../shared'
 
 export class GooglePackage implements Plugin {
   hooks: Hooks
@@ -23,7 +23,7 @@ export class GooglePackage implements Plugin {
   serverless: Serverless
   cleanupServerlessDir: () => void
   compileFunctions: () => void
-  setDefaults: () => void
+  validateAndSetDefaults: () => void
   generateArtifactDirectoryName: () => void
   mergeServiceResources: () => void
   prepareDeployment: () => void
@@ -63,7 +63,7 @@ export class GooglePackage implements Plugin {
 
     this.cleanupServerlessDir = cleanupServerlessDir.bind(this)
     this.compileFunctions = compileFunctions.bind(this)
-    this.setDefaults = setDefaults.bind(this)
+    this.validateAndSetDefaults = validateAndSetDefaults.bind(this)
     this.setDeploymentBucketName = setDeploymentBucketName.bind(this)
     this.prepareDeployment = prepareDeployment.bind(this)
     this.saveCreateTemplateFile = saveCreateTemplateFile.bind(this)
@@ -77,8 +77,7 @@ export class GooglePackage implements Plugin {
       },
 
       'before:package:initialize': async () => {
-        await validate(this.serverless.config.servicePath, this.serverless.service.service)
-        this.setDefaults()
+        this.validateAndSetDefaults()
       },
       'package:initialize': () => {
         this.setDeploymentBucketName()

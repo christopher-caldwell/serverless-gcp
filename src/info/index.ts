@@ -5,8 +5,7 @@ import Aws from 'serverless/aws'
 import { Hooks } from 'serverless/classes/plugin'
 import { constants } from '../provider'
 
-// TODO: Add validate
-import { validate } from '../shared'
+import { validateAndSetDefaults } from '../shared'
 import { Resources, displayServiceInfo, gatherData, getResources, printInfo, LogData } from './lib'
 
 export class GoogleInfo {
@@ -14,7 +13,7 @@ export class GoogleInfo {
   options: Serverless.Options
   provider: Aws
   serverless: Serverless
-  setDefaults: () => void
+  validateAndSetDefaults: () => void
   displayServiceInfo: () => Promise<void>
   gatherData: (resources: any) => LogData
   getResources: () => Promise<Resources>
@@ -25,7 +24,7 @@ export class GoogleInfo {
     this.options = options
     this.provider = this.serverless.getProvider(constants.providerName)
 
-    this.setDefaults = setDefaults.bind(this)
+    this.validateAndSetDefaults = validateAndSetDefaults.bind(this)
     this.displayServiceInfo = displayServiceInfo.bind(this)
     this.gatherData = gatherData.bind(this)
     this.getResources = getResources.bind(this)
@@ -33,8 +32,7 @@ export class GoogleInfo {
 
     this.hooks = {
       'before:info:info': async () => {
-        await validate()
-        this.setDefaults()
+        this.validateAndSetDefaults()
       },
       'deploy:deploy': () => {
         return this.displayServiceInfo()

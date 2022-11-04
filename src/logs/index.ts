@@ -4,7 +4,7 @@ import Aws from 'serverless/aws'
 import Plugin, { Commands, Hooks } from 'serverless/classes/Plugin'
 
 import { constants } from '../provider'
-import { validate, setDefaults } from '../shared'
+import { validateAndSetDefaults } from '../shared'
 
 import { retrieveLogs, getLogs, printLogs, GoogleLog } from './lib'
 
@@ -14,7 +14,7 @@ export class GoogleLogs implements Plugin {
   options: Serverless.Options
   provider: Aws
   serverless: Serverless
-  setDefaults: () => void
+  validateAndSetDefaults: () => void
   retrieveLogs: () => Promise<void>
   getLogs: () => Promise<GoogleLog>
   printLogs: (logs: GoogleLog) => void
@@ -24,7 +24,7 @@ export class GoogleLogs implements Plugin {
     this.options = options
     this.provider = this.serverless.getProvider(constants.providerName)
 
-    this.setDefaults = setDefaults.bind(this)
+    this.validateAndSetDefaults = validateAndSetDefaults.bind(this)
     this.getLogs = getLogs.bind(this)
     this.printLogs = printLogs.bind(this)
     this.retrieveLogs = retrieveLogs.bind(this)
@@ -45,8 +45,7 @@ export class GoogleLogs implements Plugin {
 
     this.hooks = {
       'before:logs:logs': async () => {
-        await validate(this.serverless.config.servicePath, this.serverless.service.service)
-        this.setDefaults()
+        this.validateAndSetDefaults()
       },
       'logs:logs': () => {
         return this.retrieveLogs()

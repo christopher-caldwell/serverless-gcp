@@ -1,8 +1,9 @@
 import path from 'path'
 import _ from 'lodash'
+import chalk from 'chalk'
 
 import { GoogleInvokeLocal } from '..'
-import { GoogleFunctionDefinition } from '../../provider'
+import { GoogleFunctionDefinition } from '../../shared/types'
 import { getReqRes } from './httpReqRes'
 
 export const invokeLocalNodeJs = async function (
