@@ -16,7 +16,6 @@ export const invokeLocalNodeJs = async function (
   // TODO add the file pointed by the main key of the package.json
   //@ts-expect-error serviceDir isn't on there
   const serviceDir = this.serverless.serviceDir as string
-  console.log({ event })
   // const paths = ['index.js', 'function.js'].map((fileName) => path.join(serviceDir, fileName))
   const [sourcePath, handlerName = 'event'] = functionObj.handler.split('.')
   const fullPath = path.join(serviceDir, sourcePath)

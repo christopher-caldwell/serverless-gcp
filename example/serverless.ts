@@ -30,6 +30,9 @@ const serverlessConfig: GoogleServerlessConfig = {
   functions: {
     SomethingElse: {
       handler: 'src/something-else/index.event',
+      environment: {
+        SOMETHING_IMPORTANT: "seriously, it's important",
+      },
       events: [
         {
           event: true,
