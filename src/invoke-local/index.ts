@@ -103,7 +103,7 @@ export class GoogleInvokeLocal implements Plugin {
     }
   }
 
-  async invokeLocalNodeJs(functionObj: GoogleFunctionDefinition, event, customContext: Record<String, unknown>) {
+  async invokeLocalNodeJs(functionObj: GoogleFunctionDefinition, event, customContext: Record<string, unknown>) {
     // index.js and function.js are the two files supported by default by a cloud-function
     // TODO add the file pointed by the main key of the package.json
     //@ts-expect-error serviceDir isn't on there
@@ -138,16 +138,10 @@ This likely means that you did not export the designated function (${handlerName
 
     this.addEnvironmentVariablesToProcessEnv(functionObj)
 
-    const eventType = Object.keys(functionObj.events[0])[0]
-
-    switch (eventType) {
-      case 'event':
-        return this.handleEvent(cloudFunction, event, customContext)
-      case 'http':
-        return this.handleHttp(cloudFunction, event)
-      default:
-        throw new Error(`${eventType} is not supported`)
+    if (handlerName === 'event') {
+      return this.handleEvent(cloudFunction, event, customContext)
     }
+    return this.handleHttp(cloudFunction, event)
   }
 
   handleError(err: Error, resolve: (value?: unknown) => void) {
