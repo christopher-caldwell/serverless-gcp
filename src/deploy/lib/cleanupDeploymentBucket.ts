@@ -1,0 +1,61 @@
+import _ from 'lodash'
+
+import { GoogleDeploy } from '..'
+
+export const cleanupDeploymentBucket = async function (this: GoogleDeploy) {
+  const objectsToRemove = await this.getObjectsToRemove()
+  return this.removeObjects(objectsToRemove)
+}
+
+export const getObjectsToRemove = async function (this: GoogleDeploy) {
+  const params = {
+    //@ts-expect-error deploymentBucketName not on there
+    bucket: this.serverless.service.provider.deploymentBucketName,
+  }
+
+  //@ts-expect-error params signature
+  const response = await this.provider.request('storage', 'objects', 'list', params)
+  if (!response.items.length) return []
+
+  const files = response.items as ObjectToRemove[]
+
+  // 4 old ones + the one which will be uploaded after the cleanup = 5
+  const objectsToKeepCount = 4
+
+  const orderedObjects = _.orderBy(
+    files,
+    (file) => {
+      const timestamp = file.name.match(/(serverless)\/(.+)\/(.+)\/(\d+)-(.+)\/(.+\.zip)/)[4]
+      return timestamp
+    },
+    ['asc'],
+  )
+
+  const objectsToKeep = _.takeRight(orderedObjects, objectsToKeepCount)
+  const objectsToRemove = _.pullAllWith(files, objectsToKeep, _.isEqual)
+
+  if (objectsToRemove.length) {
+    return objectsToRemove
+  }
+
+  return []
+}
+
+export const removeObjects = async function (this: GoogleDeploy, objectsToRemove: ObjectToRemove[]) {
+  if (!objectsToRemove.length) return
+
+  this.serverless.cli.log('Removing old artifacts...')
+
+  const removePromises = objectsToRemove.map((object) => {
+    const params = {
+      bucket: object.bucket,
+      object: object.name,
+    }
+    //@ts-expect-error params signature
+    return this.provider.request('storage', 'objects', 'delete', params)
+  })
+
+  return Promise.all(removePromises)
+}
+
+export type ObjectToRemove = any

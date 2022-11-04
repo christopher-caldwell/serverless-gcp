@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2019",
+    "skipLibCheck": true,
+    "outDir": "example/dist",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "rootDirs": ["e2e"]
+  },
+  "include": ["src", "test"],
+  "exclude": ["node_modules"]
+}
