@@ -1,6 +1,6 @@
 # Notes
 
-##  ESBuild
+## ESBuild
 
 Need to do a patch package or PR with them to allow non-aws runtimes to be built.
 
