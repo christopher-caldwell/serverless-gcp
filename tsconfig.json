@@ -1,10 +1,13 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
+    "module": "commonjs",
+    "target": "es2019",
+    "skipLibCheck": true,
+    "outDir": "example/dist",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "types": ["jest"],
-    "baseUrl": "./src"
+    "rootDirs": ["e2e"]
   },
-  "include": ["./"]
+  "include": ["src", "test"],
+  "exclude": ["node_modules"]
 }

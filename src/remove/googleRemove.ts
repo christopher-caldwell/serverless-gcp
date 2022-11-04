@@ -1,7 +1,7 @@
 import Serverless from 'serverless'
 import Aws from 'serverless/aws'
 import Plugin from 'serverless/classes/Plugin'
-import { GoogleProviderConfig, GoogleServerlessConfig } from '../provider/googleProvider'
+import { GoogleProviderConfig, GoogleServerlessConfig } from '../provider'
 
 import BbPromise from 'bluebird'
 

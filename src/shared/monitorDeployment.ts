@@ -4,7 +4,7 @@ import BbPromise from 'bluebird'
 import async from 'async'
 import Serverless from 'serverless'
 import Aws from 'serverless/aws'
-import { GoogleProviderConfig } from '../provider/googleProvider'
+import { GoogleProviderConfig } from '../provider'
 
 export const monitorDeployment = (
   deploymentName: string,

@@ -3,22 +3,19 @@
 import path from 'path'
 import os from 'os'
 import type Serverless from 'serverless'
-import AwsProvider from 'serverless/plugins/aws/provider/awsProvider'
-import type { Package } from 'serverless/aws'
+import type AwsProvider from 'serverless/aws'
 import Plugin from 'serverless/classes/Plugin'
 
 import _ from 'lodash'
 import { google, deploymentmanager_v2, storage_v1beta2, logging_v2, cloudfunctions_v1 } from 'googleapis'
 
-import pluginPackageJson from '../package.json'
 import googleApisPackageJson from 'googleapis/package.json'
-import Service from 'serverless/classes/Service'
 
 const constants = {
-  providerName: 'google',
+  providerName: '_google',
 }
 
-export class GoogleProvider extends AwsProvider {
+export class GoogleProvider {
   serverless: Serverless
   provider: GoogleProvider
   sdk: {
@@ -32,18 +29,19 @@ export class GoogleProvider extends AwsProvider {
   variableResolvers
   googleProvider: GoogleProviderConfig
   hooks: Plugin.Hooks
+  project: string
+  name: string
 
   static getProviderName() {
     return constants.providerName
   }
 
   constructor(serverless: Serverless, options?: Serverless.Options) {
-    super(serverless, options)
     this.serverless = serverless
     // This adds `credentials` to the provider type
     this.googleProvider = this.serverless.service.provider as unknown as GoogleProviderConfig
     this.provider = this // only load plugin in a Google service context
-    this.serverless.setProvider(constants.providerName, this)
+    this.serverless.setProvider(constants.providerName, this as unknown as AwsProvider)
     this.serverless.configSchemaHandler.defineProvider(constants.providerName, {
       definitions: {
         cloudFunctionRegion: {
@@ -188,12 +186,11 @@ export class GoogleProvider extends AwsProvider {
     })
 
     const serverlessVersion = this.serverless.version
-    const pluginVersion = pluginPackageJson.version
     const googleApisVersion = googleApisPackageJson.version
 
     google.options({
       headers: {
-        'User-Agent': `Serverless/${serverlessVersion} Serverless-Google-Provider/${pluginVersion} Googleapis/${googleApisVersion}`,
+        'User-Agent': `Serverless/${serverlessVersion} Serverless-Google-Provider Googleapis/${googleApisVersion}`,
       },
     })
 
@@ -235,7 +232,7 @@ export class GoogleProvider extends AwsProvider {
 
   async getGsValue({ bucket, object }: { bucket: string; object: string }) {
     return this.serverless
-      .getProvider('google')
+      .getProvider(constants.providerName)
       .request('storage', 'objects', 'get', {
         // @ts-expect-error TS(2345) FIXME: Argument of type '{ bucket: string; object: string... Remove this comment to see the full error message
         bucket,
@@ -374,6 +371,8 @@ export type GoogleRuntime =
   | 'nodejs12'
   | 'nodejs14'
   | 'nodejs16'
+  // TODO: This is why this isn't working. Need to create a map lookup for matching the AWS run times to the GCP ones.
+  | 'nodejs16.x'
   | 'python37'
   | 'python38'
   | 'python39'
@@ -396,8 +395,8 @@ export type GoogleSecretEnvironmentVariables = {
 }
 export type GoogleVpcEgress = 'ALL' | 'ALL_TRAFFIC' | 'PRIVATE' | 'PRIVATE_RANGES_ONLY'
 export type GoogleResourceManagerLabels = Record<string, string>
-export type SharedProperties = {
-  region: GoogleRegion
+export interface SharedProperties {
+  region?: GoogleRegion
   /** Can be overridden by function configuration
    * @default nodejs10
    */
@@ -406,40 +405,42 @@ export type SharedProperties = {
    * @default 256
    */
   memorySize?: GoogleMemory
+  /** Can be overridden by function configuration. JSON schema says `string`, but Serverless types say `number` */
+  timeout?: string
   /** Can be overridden by function configuration */
-  timeout: string
+  environment?: GoogleEnvironmentVariables
   /** Can be overridden by function configuration */
-  environment: GoogleEnvironmentVariables
+  secrets?: GoogleSecretEnvironmentVariables
   /** Can be overridden by function configuration */
-  secrets: GoogleSecretEnvironmentVariables
+  vpc?: string
   /** Can be overridden by function configuration */
-  vpc: string
+  vpcEgress?: GoogleVpcEgress
   /** Can be overridden by function configuration */
-  vpcEgress: GoogleVpcEgress
-  /** Can be overridden by function configuration */
-  labels: GoogleResourceManagerLabels
-  serviceAccountEmail: string
+  labels?: GoogleResourceManagerLabels
+  serviceAccountEmail?: string
 }
-export type GoogleProviderConfig = {
+export interface GoogleProviderConfig extends SharedProperties {
   /** Not required if using the default login */
   credentials?: string
   /** The Google **ID** of your target project */
   project: string
-  name: 'google'
+  name: '_google'
   // Not sure if this is valid in G, exists on base AWS
   stackTags?: { [key: string]: any }
   deploymentBucketName?: string
-} & SharedProperties
-export type GoogleFunctionDefinition = {
+  stage: string
+}
+export interface GoogleFunctionDefinition extends SharedProperties {
   /** Name of exported function to be ran by the CloudFunction. Cannot include `/` or `.` and must be a sibling to this file.
    * @nodejs Must also be `index.js`, `function.js`, or you can use the `main` key in a sibling level package.json to use subdirectory code. */
   handler: string
   minInstances?: number
   events: Array<{ event?: any; http?: any }>
-} & SharedProperties
+}
 
 export interface GoogleServerlessConfig {
-  service: Service
+  service: string
+  // service: Service
   useDotenv?: boolean
   frameworkVersion?: string
   enableLocalInstallationFallback?: boolean
@@ -448,8 +449,8 @@ export interface GoogleServerlessConfig {
   deprecationNotificationMode?: 'warn' | 'warn:summary' | 'error'
   disabledDeprecations?: string[]
   configValidationMode?: 'warn' | 'error' | 'off'
-  provider: GoogleProvider
-  package?: Package
+  provider: GoogleProviderConfig
+  package?: AwsProvider.Package
   functions?: Record<string, GoogleFunctionDefinition>
   resources?: any
   plugins?: string[]

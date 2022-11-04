@@ -1,26 +1,31 @@
 'use strict'
 
-// @ts-expect-error TS(2649) FIXME: Cannot augment module '_' with value exports becau... Remove this comment to see the full error message
-const _ = require('lodash')
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
-const BbPromise = require('bluebird')
+import Serverless from 'serverless'
 
-module.exports = {
-  setDefaults() {
-    this.options.stage = _.get(this, 'options.stage') || _.get(this, 'serverless.service.provider.stage') || 'dev'
-    this.options.runtime = _.get(this, 'options.runtime') || 'nodejs10'
+import _ from 'lodash'
+import BbPromise from 'bluebird'
 
-    // serverless framework is hard-coding us-east-1 region from aws
-    // this is temporary fix for multiple regions
-    let region = _.get(this, 'options.region') || _.get(this, 'serverless.service.provider.region')
+class _Plugin {
+  options: Serverless.Options
+  serverless: Serverless
+}
+export function setDefaults(this: _Plugin) {
+  this.options.stage = _.get(this, 'options.stage') || _.get(this, 'serverless.service.provider.stage') || 'dev'
+  //@ts-expect-error runtime. I think this is the wrong type for options?
+  console.log('this.options.runtime', this.options.runtime)
+  //@ts-expect-error runtime. I think this is the wrong type for options?
+  this.options.runtime = _.get(this, 'options.runtime') || 'nodejs10'
 
-    if (region === 'us-east-1') {
-      region = 'us-central1'
-    }
+  // serverless framework is hard-coding us-east-1 region from aws
+  // this is temporary fix for multiple regions
+  let region = _.get(this, 'options.region') || _.get(this, 'serverless.service.provider.region')
 
-    this.options.region = region
-    this.serverless.service.provider.region = region
+  if (region === 'us-east-1') {
+    region = 'us-central1'
+  }
 
-    return BbPromise.resolve()
-  },
+  this.options.region = region
+  this.serverless.service.provider.region = region
+
+  return BbPromise.resolve()
 }

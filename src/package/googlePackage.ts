@@ -6,9 +6,7 @@ const BbPromise = require('bluebird')
 const cleanupServerlessDir = require('./lib/cleanupServerlessDir')
 // @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'validate'.
 const validate = require('../shared/validate')
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'utils'.
 const utils = require('../shared/utils')
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'setDeploym... Remove this comment to see the full error message
 const setDeploymentBucketName = require('../shared/setDeploymentBucketName')
 const prepareDeployment = require('./lib/prepareDeployment')
 const saveCreateTemplateFile = require('./lib/writeFilesToDisk')
@@ -17,7 +15,6 @@ const generateArtifactDirectoryName = require('./lib/generateArtifactDirectoryNa
 const compileFunctions = require('./lib/compileFunctions')
 const saveUpdateTemplateFile = require('./lib/writeFilesToDisk')
 
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'GooglePack... Remove this comment to see the full error message
 class GooglePackage {
   cleanupServerlessDir: any
   compileFunctions: any

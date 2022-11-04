@@ -2,7 +2,6 @@
 
 // @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'path'.
 const path = require('path')
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'fs'.
 const fs = require('fs')
 const stdin = require('get-stdin')
 
