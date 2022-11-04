@@ -1,21 +1,17 @@
-'use strict'
+import BbPromise from 'bluebird'
+import path from 'path'
+import fse from 'fs-extra'
 
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
-const BbPromise = require('bluebird')
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'path'.
-const path = require('path')
-const fse = require('fs-extra')
+import { GooglePackage } from '..'
 
-module.exports = {
-  cleanupServerlessDir() {
-    if (this.serverless.config.servicePath) {
-      const serverlessDirPath = path.join(this.serverless.config.servicePath, '.serverless')
+export function cleanupServerlessDir(this: GooglePackage) {
+  if (this.serverless.config.servicePath) {
+    const serverlessDirPath = path.join(this.serverless.config.servicePath, '.serverless')
 
-      if (fse.pathExistsSync(serverlessDirPath)) {
-        fse.removeSync(serverlessDirPath)
-      }
+    if (fse.pathExistsSync(serverlessDirPath)) {
+      fse.removeSync(serverlessDirPath)
     }
+  }
 
-    return BbPromise.resolve()
-  },
+  return BbPromise.resolve()
 }

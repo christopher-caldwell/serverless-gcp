@@ -1,27 +1,21 @@
-'use strict'
+import path from 'path'
+import BbPromise from 'bluebird'
 
-/* eslint no-use-before-define: 0 */
+import { GooglePackage } from '../'
 
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'path'.
-const path = require('path')
+export const saveCreateTemplateFile = function (this: GooglePackage) {
+  const filePath = path.join(this.serverless.config.servicePath, '.serverless', 'configuration-template-create.yml')
 
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
-const BbPromise = require('bluebird')
+  // @ts-expect-error compiledConfigurationTemplate
+  const template = this.serverless.service.provider.compiledConfigurationTemplate as string
+  this.serverless.utils.writeFileSync(filePath, template)
+}
 
-module.exports = {
-  saveCreateTemplateFile() {
-    const filePath = path.join(this.serverless.config.servicePath, '.serverless', 'configuration-template-create.yml')
+export const saveUpdateTemplateFile = function (this: GooglePackage) {
+  const filePath = path.join(this.serverless.config.servicePath, '.serverless', 'configuration-template-update.yml')
 
-    this.serverless.utils.writeFileSync(filePath, this.serverless.service.provider.compiledConfigurationTemplate)
+  // @ts-expect-error compiledConfigurationTemplate
+  const template = this.serverless.service.provider.compiledConfigurationTemplate as string
 
-    return BbPromise.resolve()
-  },
-
-  saveUpdateTemplateFile() {
-    const filePath = path.join(this.serverless.config.servicePath, '.serverless', 'configuration-template-update.yml')
-
-    this.serverless.utils.writeFileSync(filePath, this.serverless.service.provider.compiledConfigurationTemplate)
-
-    return BbPromise.resolve()
-  },
+  this.serverless.utils.writeFileSync(filePath, template)
 }

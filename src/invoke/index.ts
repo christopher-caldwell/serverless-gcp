@@ -3,6 +3,7 @@
 import Serverless from 'serverless'
 import Aws from 'serverless/aws'
 import Plugin, { Hooks } from 'serverless/classes/plugin'
+import { constants } from '../provider'
 
 const BbPromise = require('bluebird')
 
@@ -19,7 +20,7 @@ export class GoogleInvoke implements Plugin {
   constructor(serverless: Serverless, options: Serverless.Options) {
     this.serverless = serverless
     this.options = options
-    this.provider = this.serverless.getProvider('google')
+    this.provider = this.serverless.getProvider(constants.providerName)
 
     this.hooks = {
       'before:invoke:invoke': () => BbPromise.bind(this).then(this.validate).then(this.setDefaults),

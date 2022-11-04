@@ -1,35 +1,27 @@
 'use strict'
 
-import BbPromise from 'bluebird'
 import async from 'async'
-import Serverless from 'serverless'
-import Aws from 'serverless/aws'
 import { GoogleProviderConfig } from '../provider'
+import { _Plugin } from './utils'
 
-export const monitorDeployment = (
-  deploymentName: string,
-  action: string,
-  frequency: number,
-  serverless: Serverless,
-  provider: Aws,
-) => {
+export const monitorDeployment = function (this: _Plugin, deploymentName: string, action: string, frequency: number) {
   const validStatuses = ['DONE']
 
   let deploymentStatus = null
 
-  serverless.cli.log(`Checking deployment ${action} progress...`)
+  this.serverless.cli.log(`Checking deployment ${action} progress...`)
 
-  return new BbPromise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     async.whilst(
       () => validStatuses.indexOf(deploymentStatus) === -1,
 
       (callback) => {
         setTimeout(() => {
           const params = {
-            project: (serverless.service.provider as unknown as GoogleProviderConfig).project,
+            project: (this.serverless.service.provider as unknown as GoogleProviderConfig).project,
           }
           return (
-            provider
+            this.provider
               // @ts-expect-error params doesn't find the shape of AWS
               .request('deploymentmanager', 'deployments', 'list', params)
               .then((response) => {
@@ -65,8 +57,8 @@ export const monitorDeployment = (
       () => {
         // empty console.log for a prettier output
         // serverless.cli.consconoleLog('')
-        serverless.cli.log('')
-        serverless.cli.log('Done...')
+        this.serverless.cli.log('')
+        this.serverless.cli.log('Done...')
         resolve(deploymentStatus)
       },
     )

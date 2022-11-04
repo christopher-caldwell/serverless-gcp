@@ -75,12 +75,7 @@ export const validateEventsProperty = (
   }
 }
 
-export const validate = async (
-  functions: GoogleServerlessConfig['functions'],
-  servicePath?: string,
-  serviceName?: string,
-) => {
+export const validate = async (servicePath?: string, serviceName?: string) => {
   await validateServicePath(servicePath)
   await validateServiceName(serviceName)
-  // validateHandlers(functions)
 }

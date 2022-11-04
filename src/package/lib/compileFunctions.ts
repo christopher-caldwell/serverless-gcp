@@ -1,109 +1,116 @@
-'use strict'
+import path from 'path'
+import _ from 'lodash'
+import BbPromise from 'bluebird'
 
-/* eslint no-use-before-define: 0 */
+import { GooglePackage } from '..'
+import { validateEventsProperty } from '../../shared'
+import { GoogleFunctionDefinition, GoogleMemory, GoogleRegion, GoogleRuntime } from '../../provider'
 
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'path'.
-const path = require('path')
+export function compileFunctions(this: GooglePackage) {
+  const artifactFilePath = this.serverless.service.package.artifact
+  const fileName = artifactFilePath.split(path.sep).pop()
+  const projectName = _.get(this, 'serverless.service.provider.project')
+  this.serverless.service.provider.region = this.serverless.service.provider.region || 'us-central1'
+  this.serverless.service.package.artifactFilePath = `${this.serverless.service.package.artifactDirectoryName}/${fileName}`
+  this.serverless.service.getAllFunctions().forEach((functionName) => {
+    const funcObject = this.serverless.service.getFunction(functionName) as unknown as GoogleFunctionDefinition
+    //@ts-expect-error vpcEgress not on AWS provider
+    let vpcEgress = funcObject.vpcEgress || this.serverless.service.provider.vpcEgress
+    this.serverless.cli.log(`Compiling function "${functionName}"...`)
+    validateHandlerProperty(funcObject, functionName)
+    validateEventsProperty(funcObject, functionName)
+    validateVpcConnectorProperty(funcObject, functionName)
+    validateVpcConnectorEgressProperty(vpcEgress)
+    const funcTemplate = getDefaultFunctionTemplate(
+      funcObject,
+      projectName,
+      this.serverless.service.provider.region as GoogleRegion,
+      //@ts-expect-error deploymentBucketName not on AWS provider
+      `gs://${this.serverless.service.provider.deploymentBucketName}/${this.serverless.service.package.artifactFilePath}`,
+    )
+    funcTemplate.properties.serviceAccountEmail =
+      _.get(funcObject, 'serviceAccountEmail') || _.get(this, 'serverless.service.provider.serviceAccountEmail') || null
 
-// @ts-expect-error TS(2649) FIXME: Cannot augment module '_' with value exports becau... Remove this comment to see the full error message
-const _ = require('lodash')
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
-const BbPromise = require('bluebird')
-const { validateEventsProperty } = require('../../shared/validate')
+    funcTemplate.properties.availableMemoryMb =
+      _.get(funcObject, 'memorySize') || _.get(this, 'serverless.service.provider.memorySize') || 256
 
-module.exports = {
-  compileFunctions() {
-    const artifactFilePath = this.serverless.service.package.artifact
-    const fileName = artifactFilePath.split(path.sep).pop()
-    const projectName = _.get(this, 'serverless.service.provider.project')
-    this.serverless.service.provider.region = this.serverless.service.provider.region || 'us-central1'
-    this.serverless.service.package.artifactFilePath = `${this.serverless.service.package.artifactDirectoryName}/${fileName}`
-    this.serverless.service.getAllFunctions().forEach((functionName) => {
-      const funcObject = this.serverless.service.getFunction(functionName)
-      let vpcEgress = funcObject.vpcEgress || this.serverless.service.provider.vpcEgress
-      this.serverless.cli.log(`Compiling function "${functionName}"...`)
-      validateHandlerProperty(funcObject, functionName)
-      validateEventsProperty(funcObject, functionName)
-      validateVpcConnectorProperty(funcObject, functionName)
-      validateVpcConnectorEgressProperty(vpcEgress)
-      const funcTemplate = getFunctionTemplate(
-        funcObject,
-        projectName,
-        this.serverless.service.provider.region,
-        `gs://${this.serverless.service.provider.deploymentBucketName}/${this.serverless.service.package.artifactFilePath}`,
-      )
-      ;(funcTemplate.properties as any).serviceAccountEmail =
-        _.get(funcObject, 'serviceAccountEmail') ||
-        _.get(this, 'serverless.service.provider.serviceAccountEmail') ||
-        null
-      funcTemplate.properties.availableMemoryMb =
-        _.get(funcObject, 'memorySize') || _.get(this, 'serverless.service.provider.memorySize') || 256
-      funcTemplate.properties.runtime = this.provider.getRuntime(funcObject)
-      funcTemplate.properties.timeout =
-        _.get(funcObject, 'timeout') || _.get(this, 'serverless.service.provider.timeout') || '60s'
-      ;(funcTemplate.properties as any).environmentVariables = this.provider.getConfiguredEnvironment(funcObject)
-      ;(funcTemplate.properties as any).secretEnvironmentVariables = this.provider.getConfiguredSecrets(funcObject)
-      if (!(funcTemplate.properties as any).serviceAccountEmail) {
-        delete (funcTemplate.properties as any).serviceAccountEmail
+    //@ts-expect-error getRuntime not on AWS provider
+    funcTemplate.properties.runtime = this.provider.getRuntime(funcObject)
+
+    funcTemplate.properties.timeout =
+      _.get(funcObject, 'timeout') || _.get(this, 'serverless.service.provider.timeout') || '60s'
+
+    //@ts-expect-error getConfiguredEnvironment not on AWS provider
+    funcTemplate.properties.environmentVariables = this.provider.getConfiguredEnvironment(funcObject)
+    //@ts-expect-error getConfiguredSecrets not on AWS provider
+    funcTemplate.properties.secretEnvironmentVariables = this.provider.getConfiguredSecrets(funcObject)
+
+    // No..
+    if (!funcTemplate.properties.serviceAccountEmail) {
+      delete funcTemplate.properties.serviceAccountEmail
+    }
+    if (funcObject.vpc) {
+      _.assign(funcTemplate.properties, {
+        vpcConnector: _.get(funcObject, 'vpc') || _.get(this, 'serverless.service.provider.vpc'),
+      })
+    }
+    if (vpcEgress) {
+      vpcEgress = vpcEgress.toUpperCase()
+      if (vpcEgress === 'ALL') vpcEgress = 'ALL_TRAFFIC'
+      if (vpcEgress === 'PRIVATE') vpcEgress = 'PRIVATE_RANGES_ONLY'
+      _.assign(funcTemplate.properties, {
+        vpcConnectorEgressSettings: vpcEgress,
+      })
+    }
+
+    if (funcObject.maxInstances) {
+      funcTemplate.properties.maxInstances = funcObject.maxInstances
+    }
+    if (funcObject.minInstances) {
+      funcTemplate.properties.minInstances = funcObject.minInstances
+    }
+    if (!_.size(funcTemplate.properties.environmentVariables)) {
+      delete funcTemplate.properties.environmentVariables
+    }
+    if (!_.size(funcTemplate.properties.secretEnvironmentVariables)) {
+      delete funcTemplate.properties.secretEnvironmentVariables
+    }
+    funcTemplate.properties.labels = _.assign(
+      {},
+      _.get(this, 'serverless.service.provider.labels') || {},
+      _.get(funcObject, 'labels') || {},
+    )
+    const eventType = Object.keys(funcObject.events[0])[0]
+    if (eventType === 'http') {
+      const url = funcObject.events[0].http
+      funcTemplate.properties.httpsTrigger = {
+        url,
       }
-      if (funcObject.vpc) {
-        _.assign(funcTemplate.properties, {
-          vpcConnector: _.get(funcObject, 'vpc') || _.get(this, 'serverless.service.provider.vpc'),
-        })
+    }
+    if (eventType === 'event') {
+      const type = funcObject.events[0].event.eventType
+      const path = funcObject.events[0].event.path
+      const resource = funcObject.events[0].event.resource
+      const failurePolicy = funcObject.events[0].event.failurePolicy
+      const retry = _.get(funcObject.events[0].event, 'failurePolicy.retry')
+      funcTemplate.properties.eventTrigger = {
+        eventType: type,
+        resource,
       }
-      if (vpcEgress) {
-        vpcEgress = vpcEgress.toUpperCase()
-        if (vpcEgress === 'ALL') vpcEgress = 'ALL_TRAFFIC'
-        if (vpcEgress === 'PRIVATE') vpcEgress = 'PRIVATE_RANGES_ONLY'
-        _.assign(funcTemplate.properties, {
-          vpcConnectorEgressSettings: vpcEgress,
-        })
-      }
-      if (funcObject.maxInstances) {
-        ;(funcTemplate.properties as any).maxInstances = funcObject.maxInstances
-      }
-      if (funcObject.minInstances) {
-        ;(funcTemplate.properties as any).minInstances = funcObject.minInstances
-      }
-      if (!_.size((funcTemplate.properties as any).environmentVariables)) {
-        delete (funcTemplate.properties as any).environmentVariables
-      }
-      if (!_.size((funcTemplate.properties as any).secretEnvironmentVariables)) {
-        delete (funcTemplate.properties as any).secretEnvironmentVariables
-      }
-      ;(funcTemplate.properties as any).labels = _.assign(
-        {},
-        _.get(this, 'serverless.service.provider.labels') || {},
-        _.get(funcObject, 'labels') || {},
-      )
-      const eventType = Object.keys(funcObject.events[0])[0]
-      if (eventType === 'http') {
-        const url = funcObject.events[0].http
-        ;(funcTemplate.properties as any).httpsTrigger = {}
-        ;(funcTemplate.properties as any).httpsTrigger.url = url
-      }
-      if (eventType === 'event') {
-        const type = funcObject.events[0].event.eventType
-                const path = funcObject.events[0].event.path; //eslint-disable-line
-        const resource = funcObject.events[0].event.resource
-        const failurePolicy = funcObject.events[0].event.failurePolicy
-        const retry = _.get(funcObject.events[0].event, 'failurePolicy.retry')
-        ;(funcTemplate.properties as any).eventTrigger = {}
-        ;(funcTemplate.properties as any).eventTrigger.eventType = type
-        if (path) (funcTemplate.properties as any).eventTrigger.path = path
-        ;(funcTemplate.properties as any).eventTrigger.resource = resource
-        if (failurePolicy) {
-          ;(funcTemplate.properties as any).eventTrigger.failurePolicy = {}
-          ;(funcTemplate.properties as any).eventTrigger.failurePolicy.retry = retry
+      if (path) funcTemplate.properties.eventTrigger.path = path
+      if (failurePolicy) {
+        funcTemplate.properties.eventTrigger.failurePolicy = {
+          retry,
         }
       }
-      this.serverless.service.provider.compiledConfigurationTemplate.resources.push(funcTemplate)
-    })
-    return BbPromise.resolve()
-  },
+    }
+    //@ts-expect-error Seems to be called `compiledCloudFormationTemplate`
+    this.serverless.service.provider.compiledConfigurationTemplate.resources.push(funcTemplate)
+    // this.serverless.service.provider.compiledCloudFormationTemplate.resources.push(funcTemplate)
+  })
 }
 
-const validateHandlerProperty = (funcObject, functionName) => {
+const validateHandlerProperty = (funcObject: GoogleFunctionDefinition, functionName: string) => {
   if (!funcObject.handler) {
     const errorMessage = [
       `Missing "handler" property for function "${functionName}".`,
@@ -114,7 +121,7 @@ const validateHandlerProperty = (funcObject, functionName) => {
   }
 }
 
-const validateVpcConnectorProperty = (funcObject, functionName) => {
+const validateVpcConnectorProperty = (funcObject: GoogleFunctionDefinition, functionName: string) => {
   if (funcObject.vpc && typeof funcObject.vpc === 'string') {
     // vpcConnector argument can be one of two possible formats as described here:
     // https://cloud.google.com/functions/docs/reference/rest/v1/projects.locations.functions#resource:-cloudfunction
@@ -134,7 +141,7 @@ const validateVpcConnectorProperty = (funcObject, functionName) => {
   }
 }
 
-const validateVpcConnectorEgressProperty = (vpcEgress) => {
+const validateVpcConnectorEgressProperty = (vpcEgress?: string) => {
   if (vpcEgress && typeof vpcEgress !== 'string') {
     const errorMessage = [
       'Your provider/function has invalid vpc connection name',
@@ -147,8 +154,44 @@ const validateVpcConnectorEgressProperty = (vpcEgress) => {
   }
 }
 
-const getFunctionTemplate = (funcObject, projectName, region, sourceArchiveUrl) => {
-  //eslint-disable-line
+interface FunctionTemplateProperties {
+  parent
+  availableMemoryMb: GoogleMemory
+  runtime: GoogleRuntime
+  timeout: string
+  entryPoint: string
+  function: string
+  sourceArchiveUrl: string
+  serviceAccountEmail?: string
+  environmentVariables?: any
+  secretEnvironmentVariables?: any
+  minInstances?: number
+  maxInstances?: number
+  httpsTrigger?: {
+    url: string
+  }
+  labels?: string
+  eventTrigger?: {
+    eventType: string
+    path?: string
+    resource: string
+    failurePolicy?: {
+      retry: number
+    }
+  }
+}
+interface FunctionTemplate {
+  type: string
+  name: string
+  properties: FunctionTemplateProperties
+}
+
+const getDefaultFunctionTemplate = (
+  funcObject: GoogleFunctionDefinition,
+  projectName: string,
+  region: GoogleRegion,
+  sourceArchiveUrl: string,
+): FunctionTemplate => {
   return {
     type: 'gcp-types/cloudfunctions-v1:projects.locations.functions',
     name: funcObject.name,

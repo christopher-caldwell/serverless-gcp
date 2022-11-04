@@ -11,7 +11,7 @@ import { google, deploymentmanager_v2, storage_v1beta2, logging_v2, cloudfunctio
 
 import googleApisPackageJson from 'googleapis/package.json'
 
-const constants = {
+export const constants = {
   providerName: '_google',
 }
 
@@ -434,7 +434,9 @@ export interface GoogleFunctionDefinition extends SharedProperties {
   /** Name of exported function to be ran by the CloudFunction. Cannot include `/` or `.` and must be a sibling to this file.
    * @nodejs Must also be `index.js`, `function.js`, or you can use the `main` key in a sibling level package.json to use subdirectory code. */
   handler: string
+  name?: string
   minInstances?: number
+  maxInstances?: number
   events: Array<{ event?: any; http?: any }>
 }
 

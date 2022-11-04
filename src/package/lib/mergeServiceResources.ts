@@ -1,25 +1,21 @@
-'use strict'
+import _, { MergeWithCustomizer } from 'lodash'
 
-/* eslint no-use-before-define: 0 */
+import { GooglePackage } from '..'
 
-// @ts-expect-error TS(2649) FIXME: Cannot augment module '_' with value exports becau... Remove this comment to see the full error message
-const _ = require('lodash')
-// @ts-expect-error TS(2451) FIXME: Cannot redeclare block-scoped variable 'BbPromise'... Remove this comment to see the full error message
-const BbPromise = require('bluebird')
+export const mergeServiceResources = function (this: GooglePackage) {
+  const resources = this.serverless.service.resources
 
-module.exports = {
-  mergeServiceResources() {
-    const resources = this.serverless.service.resources
+  if (typeof resources === 'undefined' || _.isEmpty(resources)) return BbPromise.resolve()
 
-    if (typeof resources === 'undefined' || _.isEmpty(resources)) return BbPromise.resolve()
+  // @ts-expect-error compiledConfigurationTemplate not on AWS provider
+  const template = this.serverless.service.provider.compiledConfigurationTemplate
 
-    _.mergeWith(this.serverless.service.provider.compiledConfigurationTemplate, resources, mergeCustomizer)
+  _.mergeWith(template, resources, mergeCustomizer)
 
-    return BbPromise.resolve()
-  },
+  return BbPromise.resolve()
 }
 
-const mergeCustomizer = (objValue, srcValue) => {
+const mergeCustomizer: MergeWithCustomizer = (objValue, srcValue) => {
   if (_.isArray(objValue)) return objValue.concat(srcValue)
   return objValue
 }

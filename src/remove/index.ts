@@ -1,48 +1,39 @@
 import Serverless from 'serverless'
 import Aws from 'serverless/aws'
 import Plugin from 'serverless/classes/Plugin'
-import { GoogleProviderConfig, GoogleServerlessConfig } from '../provider'
-
 import BbPromise from 'bluebird'
 
-import { validate } from '../shared/validate'
-// const validate = require('../shared/validate');
-const setDefaults = require('../shared/utils')
-const setDeploymentBucketName = require('../shared/setDeploymentBucketName')
+import { constants, GoogleProviderConfig, GoogleServerlessConfig } from '../provider'
+import { validate, setDefaults, setDeploymentBucketName } from '../shared'
+
 const emptyDeploymentBucket = require('./lib/emptyDeploymentBucket')
 const removeDeployment = require('./lib/removeDeployment')
 const monitorDeployment = require('../shared/monitorDeployment')
 
-class GoogleRemove {
+export class GoogleRemove {
   monitorDeployment: any
   serverless: Serverless
   options: Serverless.Options
   provider: Aws
   hooks: Plugin.Hooks
+  setDefaults: () => void
+  setDeploymentBucketName: () => void
+
   constructor(serverless: Serverless, options: Serverless.Options) {
     this.serverless = serverless
     this.options = options
-    this.provider = this.serverless.getProvider('google')
+    this.provider = this.serverless.getProvider(constants.providerName)
 
-    Object.assign(
-      this,
-      validate,
-      setDefaults,
-      setDeploymentBucketName,
-      emptyDeploymentBucket,
-      removeDeployment,
-      monitorDeployment,
-    )
+    this.setDefaults = setDefaults.bind(this)
+    this.setDeploymentBucketName = setDeploymentBucketName.bind(this)
+
+    Object.assign(this, emptyDeploymentBucket, removeDeployment, monitorDeployment)
 
     this.hooks = {
       'before:remove:remove': async () => {
-        await validate(
-          this.serverless.service.functions as unknown as GoogleServerlessConfig['functions'],
-          this.serverless.config.servicePath,
-          this.serverless.service.service,
-        )
-        // setDefaults
-        // setDeploymentBucketName
+        await validate(this.serverless.config.servicePath, this.serverless.service.service)
+        this.setDefaults()
+        this.setDeploymentBucketName()
       },
       'remove:remove': () => BbPromise.bind(this).then(this.emptyDeploymentBucket).then(this.removeDeployment),
     }
@@ -100,5 +91,3 @@ class GoogleRemove {
     return BbPromise.resolve(response.items)
   }
 }
-
-module.exports = GoogleRemove
