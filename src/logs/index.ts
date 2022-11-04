@@ -1,11 +1,9 @@
-import BbPromise from 'bluebird'
 import Serverless from 'serverless'
 import Aws from 'serverless/aws'
 import Plugin, { Commands, Hooks } from 'serverless/classes/Plugin'
 
 import { constants } from '../provider'
 import { validateAndSetDefaults } from '../shared'
-
 import { retrieveLogs, getLogs, printLogs, GoogleLog } from './lib'
 
 export class GoogleLogs implements Plugin {

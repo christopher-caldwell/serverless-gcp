@@ -1,5 +1,3 @@
-'use strict'
-
 import Serverless from 'serverless'
 import Aws from 'serverless/aws'
 import { Hooks } from 'serverless/classes/plugin'

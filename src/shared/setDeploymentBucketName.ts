@@ -1,6 +1,3 @@
-'use strict'
-
-import BbPromise from 'bluebird'
 import _ from 'lodash'
 
 import { _Plugin } from './utils'

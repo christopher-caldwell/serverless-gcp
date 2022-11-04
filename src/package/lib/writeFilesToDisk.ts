@@ -1,5 +1,4 @@
 import path from 'path'
-import BbPromise from 'bluebird'
 
 import { GooglePackage } from '../'
 

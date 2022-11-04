@@ -1,6 +1,5 @@
-'use strict'
-
 import async from 'async'
+
 import { GoogleProviderConfig } from '../shared/types'
 import { _Plugin } from './utils'
 

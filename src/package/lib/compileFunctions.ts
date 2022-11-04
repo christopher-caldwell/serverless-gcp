@@ -1,6 +1,5 @@
 import path from 'path'
 import _ from 'lodash'
-import BbPromise from 'bluebird'
 
 import { GooglePackage } from '..'
 import { validateEventsProperty } from '../../shared'

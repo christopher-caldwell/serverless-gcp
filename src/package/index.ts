@@ -1,4 +1,3 @@
-import BbPromise from 'bluebird'
 import Serverless from 'serverless'
 import Plugin, { Hooks } from 'serverless/classes/Plugin'
 import Aws from 'serverless/aws'
@@ -13,7 +12,6 @@ import {
   mergeServiceResources,
   generateArtifactDirectoryName,
 } from './lib'
-
 import { validateAndSetDefaults, setDeploymentBucketName } from '../shared'
 
 export class GooglePackage implements Plugin {

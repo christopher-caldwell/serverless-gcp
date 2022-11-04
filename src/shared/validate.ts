@@ -1,17 +1,12 @@
-'use strict'
-
-import { GoogleFunctionDefinition, GoogleProviderConfig, GoogleServerlessConfig } from '../shared/types'
-
-import BbPromise from 'bluebird'
 import _ from 'lodash'
+
+import { GoogleFunctionDefinition, GoogleServerlessConfig } from '../shared/types'
 import { _Plugin } from './utils'
 
 export const validateServicePath = (servicePath?: string) => {
   if (!servicePath) {
     throw new Error('This command can only be run inside a service directory')
   }
-
-  return BbPromise.resolve()
 }
 
 export const validateServiceName = (name: string) => {
@@ -23,8 +18,6 @@ export const validateServiceName = (name: string) => {
   if (name.match(/_+/)) {
     throw new Error('Your service name should not include underscores')
   }
-
-  return BbPromise.resolve()
 }
 
 export const validateHandlers = (functions: GoogleServerlessConfig['functions']) => {

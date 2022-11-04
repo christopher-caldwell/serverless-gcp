@@ -1,4 +1,3 @@
-import BbPromise from 'bluebird'
 import path from 'path'
 import fse from 'fs-extra'
 
@@ -12,6 +11,4 @@ export function cleanupServerlessDir(this: GooglePackage) {
       fse.removeSync(serverlessDirPath)
     }
   }
-
-  return BbPromise.resolve()
 }

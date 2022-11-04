@@ -1,6 +1,5 @@
 import path from 'path'
 import _ from 'lodash'
-import BbPromise from 'bluebird'
 
 import { _Plugin } from '../../shared'
 
@@ -25,8 +24,6 @@ export const prepareDeployment = function (this: _Plugin) {
 
   //@ts-expect-error compiledConfigurationTemplate on the types is cloudformation
   this.serverless.service.provider.compiledConfigurationTemplate = deploymentTemplate
-
-  return BbPromise.resolve()
 }
 
 const updateBucket = (bucket: { name: string; properties?: { location: string } }, name: string, location: string) => {
