@@ -7,7 +7,7 @@ import _ from 'lodash'
 import { google, deploymentmanager_v2, storage_v1beta2, logging_v2, cloudfunctions_v1 } from 'googleapis'
 import googleApisPackageJson from 'googleapis/package.json'
 
-import { GoogleProviderConfig } from '../shared/types'
+import { GoogleFunctionDefinition, GoogleProviderConfig } from '../shared/types'
 import { schema } from './lib'
 
 export const constants = {
@@ -15,17 +15,19 @@ export const constants = {
   providerName: '_google',
 }
 
+export interface GoogleSDK {
+  google: typeof google
+  deploymentmanager: deploymentmanager_v2.Deploymentmanager
+  storage: storage_v1beta2.Storage
+  logging: logging_v2.Logging
+  cloudfunctions: cloudfunctions_v1.Cloudfunctions
+}
+
 // TODO: Figure out how to type `provider` in the other plugins as this class
 export class GoogleProvider implements Plugin {
   serverless: Serverless
   provider: GoogleProvider
-  sdk: {
-    google: typeof google
-    deploymentmanager: deploymentmanager_v2.Deploymentmanager
-    storage: storage_v1beta2.Storage
-    logging: logging_v2.Logging
-    cloudfunctions: cloudfunctions_v1.Cloudfunctions
-  }
+  sdk: GoogleSDK
   configurationVariablesSources
   variableResolvers
   googleProvider: GoogleProviderConfig
@@ -91,57 +93,11 @@ export class GoogleProvider implements Plugin {
   }
 
   async getGsValue({ bucket, object }: { bucket: string; object: string }) {
-    return this.serverless
-      .getProvider(constants.providerName)
-      .request('storage', 'objects', 'get', {
-        // @ts-expect-error TS(2345) FIXME: Argument of type '{ bucket: string; object: string... Remove this comment to see the full error message
-        bucket,
-        object,
-        alt: 'media',
-      })
-      .catch((err) => {
-        throw new Error(`Error getting value for ${bucket}/${object}. ${err.message}`)
-      })
-  }
-
-  async request() {
-    // grab necessary stuff from arguments array
-    //TODO: fix this lazy non-sense
-    const lastArg = arguments[Object.keys(arguments).pop()]
-    const hasParams = typeof lastArg === 'object'
-    const filArgs = _.filter(arguments, (v) => typeof v === 'string')
-    const params = hasParams ? lastArg : {}
-
-    const service = filArgs[0]
-    const serviceInstance = this.sdk[service]
-    this.isServiceSupported(service)
-
-    const authClient = this.getAuthClient()
-    await authClient.getClient()
-
-    const requestParams = { auth: authClient }
-
-    // merge the params from the request call into the base functionParams
-    _.merge(requestParams, params)
-
-    return filArgs
-      .reduce((p, c) => p[c], this.sdk)
-      .bind(serviceInstance)(requestParams)
-      .then((result) => result.data)
-      .catch((error) => {
-        if (
-          error &&
-          error.errors &&
-          error.errors[0].message &&
-          _.includes(error.errors[0].message, 'project 1043443644444')
-        ) {
-          throw new Error(
-            "Incorrect configuration. Please change the 'project' key in the 'provider' block in your Serverless config file.",
-          )
-        } else if (error) {
-          throw error
-        }
-      })
+    return this.provider.sdk.storage.objects.get({
+      bucket,
+      object,
+      alt: 'media',
+    })
   }
 
   getAuthClient() {
@@ -154,15 +110,19 @@ export class GoogleProvider implements Plugin {
         credentials = credParts.reduce((memo, part) => path.join(memo, part), '')
       }
 
-      return new google.auth.GoogleAuth({
+      const auth = new google.auth.GoogleAuth({
         keyFile: credentials.toString(),
         scopes: 'https://www.googleapis.com/auth/cloud-platform',
       })
+
+      return auth.getClient()
     }
 
-    return new google.auth.GoogleAuth({
+    const auth = new google.auth.GoogleAuth({
       scopes: 'https://www.googleapis.com/auth/cloud-platform',
     })
+
+    return auth.getClient()
   }
 
   isServiceSupported(service: string) {
@@ -177,11 +137,11 @@ export class GoogleProvider implements Plugin {
   }
 
   getRuntime(funcObject: Serverless.FunctionDefinition) {
-    return _.get(funcObject, 'runtime') || _.get(this, '@/@types/serverless.service.provider.runtime') || 'nodejs10'
+    return _.get(funcObject, 'runtime') || _.get(this, 'serverless.service.provider.runtime') || 'nodejs10'
   }
 
   getConfiguredSecrets(funcObject: { secrets: string }) {
-    const providerSecrets = _.get(this, '@/@types/serverless.service.provider.secrets', {})
+    const providerSecrets = _.get(this, 'serverless.service.provider.secrets', {})
     const secrets = _.merge({}, providerSecrets, funcObject.secrets)
 
     const keys = Object.keys(secrets).sort()
@@ -193,7 +153,7 @@ export class GoogleProvider implements Plugin {
     })
   }
 
-  getConfiguredEnvironment(funcObject) {
-    return _.merge({}, _.get(this, '@/@types/serverless.service.provider.environment'), funcObject.environment)
+  getConfiguredEnvironment(funcObject: GoogleFunctionDefinition) {
+    return _.merge({}, _.get(this, 'serverless.service.provider.environment'), funcObject.environment)
   }
 }

@@ -3,6 +3,7 @@ import PluginManager = require('./classes/PluginManager')
 import Utils = require('./classes/Utils')
 import YamlParser = require('./classes/YamlParser')
 import AwsProvider = require('./aws')
+import { GoogleRuntime } from '@/shared/types'
 
 declare namespace Serverless {
   interface Options {
@@ -13,6 +14,17 @@ declare namespace Serverless {
     stage: string | null
     region: string | null
     noDeploy?: boolean | undefined
+    raw?: boolean
+    // data?: string | Record<string, unknown>
+    // TODO: These need better types
+    data?: any
+    path?: string
+    context?: any
+    contextPath?: any
+    // this should be JSON, but idk how to type
+    event?: any
+    count?: string
+    runtime?: GoogleRuntime
   }
 
   interface Config {
@@ -64,9 +76,10 @@ declare class Serverless {
 
   init(): Promise<any>
   run(): Promise<any>
+  serviceDir: string
 
   setProvider(name: string, provider: AwsProvider): null
-  getProvider(name: string): AwsProvider
+  getProvider<TProvider>(name: string): TProvider
 
   getVersion(): string
 

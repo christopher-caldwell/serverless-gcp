@@ -20,7 +20,7 @@ const serverlessConfig: GoogleServerlessConfig = {
     individually: true,
   },
   provider: {
-    deploymentBucketName: 'deployment-bucket',
+    deploymentBucketName: 'squad',
     project: 'TEST',
     name: '_google',
     runtime: 'nodejs16',

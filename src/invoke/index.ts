@@ -1,7 +1,6 @@
 import Serverless from '@/@types/serverless'
-import Aws from '@/@types/serverless/aws'
 import Plugin, { Hooks } from '@/@types/serverless/classes/plugin'
-import { constants } from '../provider'
+import { constants, GoogleProvider } from '../provider'
 
 import { validateAndSetDefaults } from '../shared'
 import { printResult, invoke, Result, invokeFunction } from './lib'
@@ -9,7 +8,7 @@ import { printResult, invoke, Result, invokeFunction } from './lib'
 export class GoogleInvoke implements Plugin {
   hooks: Hooks
   options: Serverless.Options
-  provider: Aws
+  provider: GoogleProvider
   serverless: Serverless
   validateAndSetDefaults: () => void
   invoke: () => Promise<Result>

@@ -3,7 +3,7 @@ import Aws from '@/@types/serverless/aws'
 import Plugin from '@/@types/serverless/classes/Plugin'
 import _ from 'lodash'
 
-import { constants } from '../provider'
+import { constants, GoogleProvider } from '../provider'
 import { GoogleFunctionDefinition } from '../shared/types'
 
 import { validateEventsProperty, validateAndSetDefaults } from '../shared'
@@ -20,7 +20,7 @@ import {
 export class GoogleInvokeLocal implements Plugin {
   serverless: Serverless
   options: Serverless.Options
-  provider: Aws
+  provider: GoogleProvider
   hooks: Plugin.Hooks
   validateAndSetDefaults: () => void
   getDataAndContext: () => Promise<void>
@@ -39,7 +39,7 @@ export class GoogleInvokeLocal implements Plugin {
     this.serverless = serverless
     this.options = options
 
-    this.provider = this.serverless.getProvider(constants.providerName)
+    this.provider = this.serverless.getProvider<GoogleProvider>(constants.providerName)
     this.validateAndSetDefaults = validateAndSetDefaults.bind(this)
     this.getDataAndContext = getDataAndContext.bind(this)
     this.loadFileInOption = loadFileInOption.bind(this)
@@ -74,9 +74,7 @@ export class GoogleInvokeLocal implements Plugin {
       throw new Error(`Local invocation with runtime ${runtime} is not supported`)
     }
 
-    //@ts-expect-error event not on options
     const event = this.options.event
-    //@ts-expect-error context not on options
     const context = this.options.context
 
     return this.invokeLocalNodeJs(functionObj, event, context)

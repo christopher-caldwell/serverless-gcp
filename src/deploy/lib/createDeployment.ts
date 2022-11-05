@@ -9,19 +9,17 @@ export const createDeployment = async function (this: GoogleDeploy) {
 }
 
 export const checkForExistingDeployment = async function (this: GoogleDeploy): Promise<Deployment | undefined> {
+  const auth = await this.provider.getAuthClient()
   const params = {
-    //@ts-expect-error project not on there
-    project: this.serverless.service.provider.project,
+    project: this.provider.googleProvider.project,
+    auth,
   }
 
-  //@ts-expect-error params index signature
-  const response = (await this.provider.request('deploymentmanager', 'deployments', 'list', params)) as {
-    deployments: Deployment[]
-  }
+  const { data } = await this.provider.sdk.deploymentmanager.deployments.list(params)
   let foundDeployment: Deployment
 
-  if (response && response.deployments) {
-    foundDeployment = response.deployments.find((deployment) => {
+  if (data && data.deployments) {
+    foundDeployment = data.deployments.find((deployment) => {
       const name = `sls-${this.serverless.service.service}-${this.options.stage}`
       return deployment.name === name
     })
@@ -39,9 +37,10 @@ export const createIfNotExists = async function (this: GoogleDeploy, foundDeploy
 
   const deploymentName = `sls-${this.serverless.service.service}-${this.options.stage}`
 
+  const auth = await this.provider.getAuthClient()
   const params = {
-    //@ts-expect-error project not on there
-    project: this.serverless.service.provider.project,
+    auth,
+    project: this.provider.googleProvider.project,
     resource: {
       name: deploymentName,
       target: {
@@ -52,8 +51,7 @@ export const createIfNotExists = async function (this: GoogleDeploy, foundDeploy
     },
   }
 
-  //@ts-expect-error params index signature
-  await this.provider.request('deploymentmanager', 'deployments', 'insert', params)
+  await this.provider.sdk.deploymentmanager.deployments.insert(params)
 
   return this.monitorDeployment(deploymentName, 'create', 5000)
 }

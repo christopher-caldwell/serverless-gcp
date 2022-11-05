@@ -1,8 +1,7 @@
 import Serverless from '@/@types/serverless'
-import Aws from '@/@types/serverless/aws'
 import Plugin, { Commands, Hooks } from '@/@types/serverless/classes/Plugin'
 
-import { constants } from '../provider'
+import { constants, GoogleProvider } from '../provider'
 import { validateAndSetDefaults } from '../shared'
 import { retrieveLogs, getLogs, printLogs, GoogleLog } from './lib'
 
@@ -10,7 +9,7 @@ export class GoogleLogs implements Plugin {
   commands: Commands
   hooks: Hooks
   options: Serverless.Options
-  provider: Aws
+  provider: GoogleProvider
   serverless: Serverless
   validateAndSetDefaults: () => void
   retrieveLogs: () => Promise<void>

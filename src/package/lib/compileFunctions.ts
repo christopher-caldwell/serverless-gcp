@@ -8,7 +8,7 @@ import { GoogleFunctionDefinition, GoogleMemory, GoogleRegion, GoogleRuntime } f
 export function compileFunctions(this: GooglePackage) {
   const artifactFilePath = this.serverless.service.package.artifact
   const fileName = artifactFilePath.split(path.sep).pop()
-  const projectName = _.get(this, '@/@types/serverless.service.provider.project')
+  const projectName = _.get(this, 'serverless.service.provider.project')
   this.serverless.service.provider.region = this.serverless.service.provider.region || 'us-central1'
   this.serverless.service.package.artifactFilePath = `${this.serverless.service.package.artifactDirectoryName}/${fileName}`
   this.serverless.service.getAllFunctions().forEach((functionName) => {
@@ -28,18 +28,16 @@ export function compileFunctions(this: GooglePackage) {
       `gs://${this.serverless.service.provider.deploymentBucketName}/${this.serverless.service.package.artifactFilePath}`,
     )
     funcTemplate.properties.serviceAccountEmail =
-      _.get(funcObject, 'serviceAccountEmail') ||
-      _.get(this, '@/@types/serverless.service.provider.serviceAccountEmail') ||
-      null
+      _.get(funcObject, 'serviceAccountEmail') || _.get(this, 'serverless.service.provider.serviceAccountEmail') || null
 
     funcTemplate.properties.availableMemoryMb =
-      _.get(funcObject, 'memorySize') || _.get(this, '@/@types/serverless.service.provider.memorySize') || 256
+      _.get(funcObject, 'memorySize') || _.get(this, 'serverless.service.provider.memorySize') || 256
 
     //@ts-expect-error getRuntime not on AWS provider
     funcTemplate.properties.runtime = this.provider.getRuntime(funcObject)
 
     funcTemplate.properties.timeout =
-      _.get(funcObject, 'timeout') || _.get(this, '@/@types/serverless.service.provider.timeout') || '60s'
+      _.get(funcObject, 'timeout') || _.get(this, 'serverless.service.provider.timeout') || '60s'
 
     //@ts-expect-error getConfiguredEnvironment not on AWS provider
     funcTemplate.properties.environmentVariables = this.provider.getConfiguredEnvironment(funcObject)
@@ -52,7 +50,7 @@ export function compileFunctions(this: GooglePackage) {
     }
     if (funcObject.vpc) {
       _.assign(funcTemplate.properties, {
-        vpcConnector: _.get(funcObject, 'vpc') || _.get(this, '@/@types/serverless.service.provider.vpc'),
+        vpcConnector: _.get(funcObject, 'vpc') || _.get(this, 'serverless.service.provider.vpc'),
       })
     }
     if (vpcEgress) {
@@ -78,7 +76,7 @@ export function compileFunctions(this: GooglePackage) {
     }
     funcTemplate.properties.labels = _.assign(
       {},
-      _.get(this, '@/@types/serverless.service.provider.labels') || {},
+      _.get(this, 'serverless.service.provider.labels') || {},
       _.get(funcObject, 'labels') || {},
     )
     const eventType = Object.keys(funcObject.events[0])[0]

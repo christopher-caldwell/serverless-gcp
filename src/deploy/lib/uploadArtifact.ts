@@ -5,9 +5,10 @@ import { GoogleDeploy } from '..'
 export const uploadArtifacts = async function (this: GoogleDeploy) {
   this.serverless.cli.log('Uploading artifacts...')
 
-  //@ts-expect-error deploymentBucketName not on AWS
-  const bucketName = this.serverless.service.provider.deploymentBucketName
+  const bucketName = this.provider.googleProvider.deploymentBucketName
+  const auth = await this.provider.getAuthClient()
   const params = {
+    auth,
     bucket: bucketName,
     resource: {
       name: this.serverless.service.package.artifactFilePath,
@@ -20,7 +21,6 @@ export const uploadArtifacts = async function (this: GoogleDeploy) {
     },
   }
 
-  //@ts-expect-error params are different signature
-  await this.provider.request('storage', 'objects', 'insert', params)
+  await this.provider.sdk.storage.objects.insert(params)
   this.serverless.cli.log('Artifacts successfully uploaded...')
 }

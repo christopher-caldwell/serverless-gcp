@@ -14,8 +14,7 @@ export const invokeLocalNodeJs = async function (
 ) {
   // index.js and function.js are the two files supported by default by a cloud-function
   // TODO add the file pointed by the main key of the package.json
-  //@ts-expect-error serviceDir isn't on there
-  const serviceDir = this.serverless.serviceDir as string
+  const serviceDir = this.serverless.serviceDir
   // const paths = ['index.js', 'function.js'].map((fileName) => path.join(serviceDir, fileName))
   const [sourcePath, handlerName = 'event'] = functionObj.handler.split('.')
   const fullPath = path.join(serviceDir, sourcePath)
@@ -156,7 +155,6 @@ export const addEnvironmentVariablesToProcessEnv = function (
   this: GoogleInvokeLocal,
   functionObj: GoogleFunctionDefinition,
 ) {
-  //@ts-expect-error getConfiguredEnvironment not on provider
   const environmentVariables = this.provider.getConfiguredEnvironment(functionObj)
   _.merge(process.env, environmentVariables)
 }
