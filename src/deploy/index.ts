@@ -1,5 +1,6 @@
-import Serverless from '@/@types/serverless'
-import { Hooks } from '@/@types/serverless/classes/plugin'
+import type Serverless from '@/@types/serverless'
+import type { Hooks } from '@/@types/serverless/classes/plugin'
+import { deploymentmanager_v2 } from 'googleapis'
 
 import { monitorDeployment, validateAndSetDefaults, setDeploymentBucketName } from '../shared'
 import { constants, GoogleProvider } from '../provider'
@@ -13,7 +14,6 @@ import {
   createIfNotExists,
   ObjectToRemove,
 } from './lib'
-import { deploymentmanager_v2 } from 'googleapis'
 
 export class GoogleDeploy {
   hooks: Hooks

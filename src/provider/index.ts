@@ -23,7 +23,6 @@ export interface GoogleSDK {
   cloudfunctions: cloudfunctions_v1.Cloudfunctions
 }
 
-// TODO: Figure out how to type `provider` in the other plugins as this class
 export class GoogleProvider implements Plugin {
   serverless: Serverless
   provider: GoogleProvider
@@ -136,11 +135,11 @@ export class GoogleProvider implements Plugin {
     }
   }
 
-  getRuntime(funcObject: Serverless.FunctionDefinition) {
+  getRuntime(funcObject: GoogleFunctionDefinition) {
     return _.get(funcObject, 'runtime') || _.get(this, 'serverless.service.provider.runtime') || 'nodejs10'
   }
 
-  getConfiguredSecrets(funcObject: { secrets: string }) {
+  getConfiguredSecrets(funcObject: GoogleFunctionDefinition) {
     const providerSecrets = _.get(this, 'serverless.service.provider.secrets', {})
     const secrets = _.merge({}, providerSecrets, funcObject.secrets)
 

@@ -1,12 +1,10 @@
 import Serverless from '@/@types/serverless'
-import Aws from '@/@types/serverless/aws'
-import Plugin from '@/@types/serverless/classes/Plugin'
+import Plugin, { Logging } from '@/@types/serverless/classes/Plugin'
 import _ from 'lodash'
 
 import { constants, GoogleProvider } from '../provider'
 import { GoogleFunctionDefinition } from '../shared/types'
-
-import { validateEventsProperty, validateAndSetDefaults } from '../shared'
+import { validateEventsProperty, validateAndSetDefaults, getFunctionPath } from '../shared'
 import {
   getDataAndContext,
   loadFileInOption,
@@ -22,6 +20,12 @@ export class GoogleInvokeLocal implements Plugin {
   options: Serverless.Options
   provider: GoogleProvider
   hooks: Plugin.Hooks
+  logging: Logging
+  getFunctionPath: (functionObj: GoogleFunctionDefinition) => {
+    fullPath: string
+    handlerContainer: Record<string, any>
+    handlerName: string
+  }
   validateAndSetDefaults: () => void
   getDataAndContext: () => Promise<void>
   loadFileInOption: (filePath: string, optionKey: string) => Promise<void>
@@ -35,12 +39,14 @@ export class GoogleInvokeLocal implements Plugin {
   handleHttp: (cloudFunction, event) => void
   addEnvironmentVariablesToProcessEnv: (functionObj: GoogleFunctionDefinition) => void
 
-  constructor(serverless: Serverless, options: Serverless.Options) {
+  constructor(serverless: Serverless, options: Serverless.Options, logging: Logging) {
     this.serverless = serverless
     this.options = options
+    this.logging = logging
 
     this.provider = this.serverless.getProvider<GoogleProvider>(constants.providerName)
     this.validateAndSetDefaults = validateAndSetDefaults.bind(this)
+    this.getFunctionPath = getFunctionPath.bind(this)
     this.getDataAndContext = getDataAndContext.bind(this)
     this.loadFileInOption = loadFileInOption.bind(this)
     this.invokeLocalNodeJs = invokeLocalNodeJs.bind(this)
@@ -68,7 +74,6 @@ export class GoogleInvokeLocal implements Plugin {
     ) as unknown as GoogleFunctionDefinition
     validateEventsProperty(functionObj, this.options.function)
 
-    //@ts-expect-error getRuntime not on provider
     const runtime = this.provider.getRuntime(functionObj)
     if (!runtime.startsWith('nodejs')) {
       throw new Error(`Local invocation with runtime ${runtime} is not supported`)

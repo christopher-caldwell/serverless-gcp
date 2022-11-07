@@ -1,4 +1,3 @@
-import path from 'path'
 import _ from 'lodash'
 import chalk from 'chalk'
 
@@ -12,27 +11,7 @@ export const invokeLocalNodeJs = async function (
   event,
   customContext: Record<string, unknown>,
 ) {
-  // index.js and function.js are the two files supported by default by a cloud-function
-  // TODO add the file pointed by the main key of the package.json
-  const serviceDir = this.serverless.serviceDir
-  // const paths = ['index.js', 'function.js'].map((fileName) => path.join(serviceDir, fileName))
-  const [sourcePath, handlerName = 'event'] = functionObj.handler.split('.')
-  const fullPath = path.join(serviceDir, sourcePath)
-  if (!fullPath) {
-    throw new Error(`Failed to join paths to the targeted function`)
-  }
-  if (handlerName !== 'event' && handlerName !== 'http') {
-    throw new Error(
-      `The only supported function names are "event" and "http". You provided ${handlerName}. 
-      
-Blame Google, not me.`,
-    )
-  }
-
-  const handlerContainer = tryToRequirePaths(fullPath)
-  if (!handlerContainer) {
-    throw new Error(`Failed to require ${fullPath}`)
-  }
+  const { handlerName, handlerContainer } = this.getFunctionPath(functionObj)
 
   const cloudFunction = handlerContainer[handlerName]
   if (!cloudFunction) {

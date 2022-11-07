@@ -91,6 +91,8 @@ export interface GoogleProviderConfig extends SharedProperties {
   // Not sure if this is valid in G, exists on base AWS
   stackTags?: { [key: string]: any }
   deploymentBucketName?: string
+  // TODO: uh?
+  compiledConfigurationTemplate?: any
   stage: string
 }
 export interface GoogleFunctionDefinition extends SharedProperties {
