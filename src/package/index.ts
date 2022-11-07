@@ -1,8 +1,7 @@
-import Serverless from 'serverless'
-import Plugin, { Hooks } from 'serverless/classes/Plugin'
-import Aws from 'serverless/aws'
+import Serverless from '@/@types/serverless'
+import Plugin, { Hooks, Logging } from '@/@types/serverless/classes/Plugin'
 
-import { constants } from '../provider'
+import { constants, GoogleProvider } from '../provider'
 import {
   prepareDeployment,
   compileFunctions,
@@ -17,8 +16,10 @@ import { validateAndSetDefaults, setDeploymentBucketName } from '../shared'
 export class GooglePackage implements Plugin {
   hooks: Hooks
   options: Serverless.Options
-  provider: Aws
+  provider: GoogleProvider
   serverless: Serverless
+  logging: Logging
+
   cleanupServerlessDir: () => void
   compileFunctions: () => void
   validateAndSetDefaults: () => void
@@ -28,9 +29,11 @@ export class GooglePackage implements Plugin {
   saveCreateTemplateFile: () => void
   saveUpdateTemplateFile: () => void
   setDeploymentBucketName: () => void
-  constructor(serverless: Serverless, options: Serverless.Options) {
+
+  constructor(serverless: Serverless, options: Serverless.Options, logging: Logging) {
     this.serverless = serverless
     this.options = options
+    this.logging = logging
     this.provider = this.serverless.getProvider(constants.providerName)
     this.serverless.configSchemaHandler.defineFunctionEvent(constants.providerName, 'http', { type: 'string' })
     this.serverless.configSchemaHandler.defineFunctionEvent(constants.providerName, 'event', {
@@ -71,26 +74,32 @@ export class GooglePackage implements Plugin {
 
     this.hooks = {
       'package:cleanup': () => {
+        this.serverless.cli.log('Running package:cleanup hook')
         this.cleanupServerlessDir()
       },
 
       'before:package:initialize': async () => {
+        this.serverless.cli.log('Running before:package:initialize  hook')
         this.validateAndSetDefaults()
       },
       'package:initialize': () => {
+        this.serverless.cli.log('Running package:initialize hook')
         this.setDeploymentBucketName()
         this.prepareDeployment()
         this.saveCreateTemplateFile()
       },
 
       'before:package:compileFunctions': () => {
+        this.serverless.cli.log('Running before:package:compileFunctions hook')
         this.generateArtifactDirectoryName()
       },
 
       'package:compileFunctions': () => {
+        this.serverless.cli.log('Running package:compileFunctions hook')
         this.compileFunctions()
       },
       'package:finalize': () => {
+        this.serverless.cli.log('Running package:finalize hook')
         this.mergeServiceResources()
         this.saveUpdateTemplateFile()
       },

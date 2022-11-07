@@ -6,7 +6,11 @@
     "outDir": "example/dist",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "rootDirs": ["e2e"]
+    "rootDirs": ["e2e"],
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    }
   },
   "include": ["src", "test"],
   "exclude": ["node_modules"]

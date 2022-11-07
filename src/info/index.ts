@@ -1,7 +1,7 @@
-import Serverless from 'serverless'
-import Aws from 'serverless/aws'
-import { Hooks } from 'serverless/classes/plugin'
-import { constants } from '../provider'
+import Serverless from '@/@types/serverless'
+import Aws from '@/@types/serverless/aws'
+import { Hooks } from '@/@types/serverless/classes/plugin'
+import { constants, GoogleProvider } from '../provider'
 
 import { validateAndSetDefaults } from '../shared'
 import { Resources, displayServiceInfo, gatherData, getResources, printInfo, LogData } from './lib'
@@ -9,7 +9,7 @@ import { Resources, displayServiceInfo, gatherData, getResources, printInfo, Log
 export class GoogleInfo {
   hooks: Hooks
   options: Serverless.Options
-  provider: Aws
+  provider: GoogleProvider
   serverless: Serverless
   validateAndSetDefaults: () => void
   displayServiceInfo: () => Promise<void>

@@ -20,7 +20,8 @@ const serverlessConfig: GoogleServerlessConfig = {
     individually: true,
   },
   provider: {
-    project: 'TEST',
+    deploymentBucketName: 'squad',
+    project: process.env.SERVERLESS_GCP_PROJECT!,
     name: '_google',
     runtime: 'nodejs16',
     memorySize: 128,

@@ -3,54 +3,60 @@ import async from 'async'
 import { GoogleProviderConfig } from '../shared/types'
 import { _Plugin } from './utils'
 
-export const monitorDeployment = function (this: _Plugin, deploymentName: string, action: string, frequency: number) {
-  const validStatuses = ['DONE']
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-  let deploymentStatus = null
+type DeploymentStatus = 'PENDING' | 'RUNNING' | 'DONE'
+const validStatus: DeploymentStatus = 'DONE'
+
+export const monitorDeployment = async function (
+  this: _Plugin,
+  deploymentName: string,
+  action: string,
+  frequency: number,
+) {
+  let deploymentStatus: DeploymentStatus = null
 
   this.serverless.cli.log(`Checking deployment ${action} progress...`)
+  const auth = await this.provider.getAuthClient()
 
   return new Promise((resolve, reject) => {
     async.whilst(
-      () => validStatuses.indexOf(deploymentStatus) === -1,
+      () => validStatus === deploymentStatus,
 
-      (callback) => {
-        setTimeout(() => {
-          const params = {
-            project: (this.serverless.service.provider as unknown as GoogleProviderConfig).project,
+      async (callback) => {
+        await wait(frequency)
+        const params = {
+          auth,
+          project: this.provider.googleProvider.project,
+        }
+
+        try {
+          const { data } = await this.provider.sdk.deploymentmanager.deployments.list(params)
+
+          // if actions is "remove" and no deployments are left set to "DONE"
+          if (!data.deployments && action === 'remove') {
+            deploymentStatus = 'DONE'
+            callback()
           }
-          return (
-            this.provider
-              // @ts-expect-error params doesn't find the shape of AWS
-              .request('deploymentmanager', 'deployments', 'list', params)
-              .then((response) => {
-                // if actions is "remove" and no deployments are left set to "DONE"
-                if (!response.deployments && action === 'remove') {
-                  deploymentStatus = 'DONE'
-                  callback()
-                }
 
-                const deployment = response.deployments.find((dep) => dep.name === deploymentName)
+          const deployment = data.deployments.find((dep) => dep.name === deploymentName)
 
-                // if actions is "remove" and deployment disappeared then set to "DONE"
-                if (!deployment && action === 'remove') {
-                  deploymentStatus = 'DONE'
-                  callback()
-                }
+          // if actions is "remove" and deployment disappeared then set to "DONE"
+          if (!deployment && action === 'remove') {
+            deploymentStatus = 'DONE'
+            callback()
+          }
 
-                throwErrorIfDeploymentFails(deployment)
+          throwErrorIfDeploymentFails(deployment)
 
-                deploymentStatus = deployment.operation.status
+          deploymentStatus = deployment.operation.status as DeploymentStatus
 
-                // @ts-expect-error printDot doesn't exist
-                serverless.cli.printDot()
-                return callback()
-              })
-              .catch((error) => {
-                reject(error)
-              })
-          )
-        }, frequency)
+          // @ts-expect-error printDot doesn't exist
+          serverless.cli.printDot()
+          return callback()
+        } catch (e) {
+          reject(e)
+        }
       },
 
       () => {

@@ -8,26 +8,25 @@ export const invokeFunction = async function (this: GoogleInvoke) {
   this.printResult(result)
 }
 
-export const invoke = function (this: GoogleInvoke) {
-  //@ts-expect-error project is not on AWS
-  const project = this.serverless.service.provider.project
+export const invoke = async function (this: GoogleInvoke) {
+  const project = this.provider.googleProvider.project
   const region = this.options.region
   let func = this.options.function
-  //@ts-expect-error data is not on options
-  const data = this.options.data || ''
+  const resourceData = this.options.data || ''
 
   const functions = this.serverless.service.functions as unknown as GoogleServerlessConfig['functions']
   func = getGoogleCloudFunctionName(functions, func)
-
+  const auth = await this.provider.getAuthClient()
   const params = {
+    auth,
     name: `projects/${project}/locations/${region}/functions/${func}`,
     resource: {
-      data,
+      data: resourceData,
     },
   }
+  const { data } = await this.provider.sdk.cloudfunctions.projects.locations.functions.call(params)
 
-  //@ts-expect-error params call signature
-  return this.provider.request('cloudfunctions', 'projects', 'locations', 'functions', 'call', params)
+  return data
 }
 
 export interface Result {

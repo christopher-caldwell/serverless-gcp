@@ -3,18 +3,23 @@ import _ from 'lodash'
 
 import { GooglePackage } from '..'
 import { validateEventsProperty } from '../../shared'
-import { GoogleFunctionDefinition, GoogleMemory, GoogleRegion, GoogleRuntime } from '../../shared/types'
+import {
+  GoogleFunctionDefinition,
+  GoogleMemory,
+  GoogleRegion,
+  GoogleRuntime,
+  GoogleVpcEgress,
+} from '../../shared/types'
 
 export function compileFunctions(this: GooglePackage) {
-  const artifactFilePath = this.serverless.service.package.artifact
+  const artifactFilePath = this.serverless.service.package.artifactDirectoryName
   const fileName = artifactFilePath.split(path.sep).pop()
   const projectName = _.get(this, 'serverless.service.provider.project')
   this.serverless.service.provider.region = this.serverless.service.provider.region || 'us-central1'
   this.serverless.service.package.artifactFilePath = `${this.serverless.service.package.artifactDirectoryName}/${fileName}`
   this.serverless.service.getAllFunctions().forEach((functionName) => {
     const funcObject = this.serverless.service.getFunction(functionName) as unknown as GoogleFunctionDefinition
-    //@ts-expect-error vpcEgress not on AWS provider
-    let vpcEgress = funcObject.vpcEgress || this.serverless.service.provider.vpcEgress
+    let vpcEgress = funcObject.vpcEgress || this.provider.googleProvider.vpcEgress
     this.serverless.cli.log(`Compiling function "${functionName}"...`)
     validateHandlerProperty(funcObject, functionName)
     validateEventsProperty(funcObject, functionName)
@@ -24,8 +29,7 @@ export function compileFunctions(this: GooglePackage) {
       funcObject,
       projectName,
       this.serverless.service.provider.region as GoogleRegion,
-      //@ts-expect-error deploymentBucketName not on AWS provider
-      `gs://${this.serverless.service.provider.deploymentBucketName}/${this.serverless.service.package.artifactFilePath}`,
+      `gs://${this.provider.googleProvider.deploymentBucketName}/${this.serverless.service.package.artifactFilePath}`,
     )
     funcTemplate.properties.serviceAccountEmail =
       _.get(funcObject, 'serviceAccountEmail') || _.get(this, 'serverless.service.provider.serviceAccountEmail') || null
@@ -33,15 +37,12 @@ export function compileFunctions(this: GooglePackage) {
     funcTemplate.properties.availableMemoryMb =
       _.get(funcObject, 'memorySize') || _.get(this, 'serverless.service.provider.memorySize') || 256
 
-    //@ts-expect-error getRuntime not on AWS provider
     funcTemplate.properties.runtime = this.provider.getRuntime(funcObject)
 
     funcTemplate.properties.timeout =
       _.get(funcObject, 'timeout') || _.get(this, 'serverless.service.provider.timeout') || '60s'
 
-    //@ts-expect-error getConfiguredEnvironment not on AWS provider
     funcTemplate.properties.environmentVariables = this.provider.getConfiguredEnvironment(funcObject)
-    //@ts-expect-error getConfiguredSecrets not on AWS provider
     funcTemplate.properties.secretEnvironmentVariables = this.provider.getConfiguredSecrets(funcObject)
 
     // No..
@@ -54,7 +55,7 @@ export function compileFunctions(this: GooglePackage) {
       })
     }
     if (vpcEgress) {
-      vpcEgress = vpcEgress.toUpperCase()
+      vpcEgress = vpcEgress.toUpperCase() as GoogleVpcEgress
       if (vpcEgress === 'ALL') vpcEgress = 'ALL_TRAFFIC'
       if (vpcEgress === 'PRIVATE') vpcEgress = 'PRIVATE_RANGES_ONLY'
       _.assign(funcTemplate.properties, {
@@ -103,9 +104,7 @@ export function compileFunctions(this: GooglePackage) {
         }
       }
     }
-    //@ts-expect-error Seems to be called `compiledCloudFormationTemplate`
-    this.serverless.service.provider.compiledConfigurationTemplate.resources.push(funcTemplate)
-    // this.serverless.service.provider.compiledCloudFormationTemplate.resources.push(funcTemplate)
+    this.provider.googleProvider.compiledConfigurationTemplate.resources.push(funcTemplate)
   })
 }
 

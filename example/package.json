@@ -4,8 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "invoke:test": "serverless invoke local --function Test --verbose",
-    "invoke:something-else": "serverless invoke local --function SomethingElse --verbose"
+    "invoke:test": ". .env && serverless invoke local --function Test --verbose",
+    "invoke:something-else": ". .env && serverless invoke local --function SomethingElse --verbose",
+    "package": ". .env && serverless package --verbose"
   },
   "dependencies": {
     "serverless": "^3.24.0"

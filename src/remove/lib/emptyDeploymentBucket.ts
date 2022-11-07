@@ -7,30 +7,32 @@ export const emptyDeploymentBucket = async function (this: GoogleRemove) {
 }
 
 export const getObjectsToRemove = async function (this: GoogleRemove) {
+  const auth = await this.provider.getAuthClient()
   const params = {
-    //@ts-expect-error deploymentBucketName not on AWS
-    bucket: this.serverless.service.provider.deploymentBucketName,
+    auth,
+    bucket: this.provider.googleProvider.deploymentBucketName,
   }
 
-  //@ts-expect-error params signature
-  const response = await this.provider.request('storage', 'objects', 'list', params)
-  if (!response.items || !response.items.length) return []
+  const { data } = await this.provider.sdk.storage.objects.list(params)
 
-  return response.items
+  if (!data.items || !data.items.length) return []
+
+  return data.items
 }
 
-export const removeObjects = function (this: GoogleRemove, objectsToRemove: ObjectToRemove[]) {
+export const removeObjects = async function (this: GoogleRemove, objectsToRemove: ObjectToRemove[]) {
   if (!objectsToRemove.length) return
+  const auth = await this.provider.getAuthClient()
 
   this.serverless.cli.log('Removing artifacts in deployment bucket...')
 
   const removePromises = objectsToRemove.map((object) => {
     const params = {
+      auth,
       bucket: object.bucket,
       object: object.name,
     }
-    //@ts-expect-error params signature
-    return this.provider.request('storage', 'objects', 'delete', params)
+    return this.provider.sdk.storage.objects.delete(params)
   })
 
   return Promise.all(removePromises)

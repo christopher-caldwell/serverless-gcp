@@ -8,16 +8,15 @@ export const cleanupDeploymentBucket = async function (this: GoogleDeploy) {
 }
 
 export const getObjectsToRemove = async function (this: GoogleDeploy) {
-  const params = {
-    //@ts-expect-error deploymentBucketName not on there
-    bucket: this.serverless.service.provider.deploymentBucketName,
-  }
+  const auth = await this.provider.getAuthClient()
+  const { data } = await this.provider.sdk.storage.objects.list({
+    bucket: this.provider.googleProvider.deploymentBucketName,
+    auth,
+  })
 
-  //@ts-expect-error params signature
-  const response = await this.provider.request('storage', 'objects', 'list', params)
-  if (!response.items.length) return []
+  if (!data.items?.length) return []
 
-  const files = response.items as ObjectToRemove[]
+  const files = data.items
 
   // 4 old ones + the one which will be uploaded after the cleanup = 5
   const objectsToKeepCount = 4
@@ -51,8 +50,8 @@ export const removeObjects = async function (this: GoogleDeploy, objectsToRemove
       bucket: object.bucket,
       object: object.name,
     }
-    //@ts-expect-error params signature
-    return this.provider.request('storage', 'objects', 'delete', params)
+
+    return this.provider.sdk.storage.objects.delete(params)
   })
 
   return Promise.all(removePromises)

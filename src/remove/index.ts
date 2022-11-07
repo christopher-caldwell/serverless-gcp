@@ -1,8 +1,7 @@
-import Serverless from 'serverless'
-import Aws from 'serverless/aws'
-import Plugin from 'serverless/classes/Plugin'
+import Serverless from '@/@types/serverless'
+import Plugin from '@/@types/serverless/classes/Plugin'
 
-import { constants } from '../provider'
+import { constants, GoogleProvider } from '../provider'
 import { ObjectToRemove } from '../deploy/lib'
 import { monitorDeployment, validateAndSetDefaults, setDeploymentBucketName } from '../shared'
 import { removeObjects, emptyDeploymentBucket, getObjectsToRemove, removeDeployment } from './lib'
@@ -10,7 +9,7 @@ import { removeObjects, emptyDeploymentBucket, getObjectsToRemove, removeDeploym
 export class GoogleRemove {
   serverless: Serverless
   options: Serverless.Options
-  provider: Aws
+  provider: GoogleProvider
   hooks: Plugin.Hooks
   monitorDeployment: (deploymentName: string, action: string, frequency: number) => Promise<string>
   validateAndSetDefaults: () => void

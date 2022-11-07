@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+import { deploymentmanager_v2 } from 'googleapis'
 import _ from 'lodash'
 
 import { GoogleInfo } from '..'
@@ -9,14 +10,18 @@ export const displayServiceInfo = async function (this: GoogleInfo) {
   this.printInfo(logData)
 }
 
-export const getResources = function (this: GoogleInfo): Promise<Resources> {
-  //@ts-expect-error project not on provider
-  const project = this.serverless.service.provider.project
-  return this.provider.request('deploymentmanager', 'resources', 'list', {
-    //@ts-expect-error project not on provider
+export const getResources = async function (this: GoogleInfo): Promise<Resources> {
+  const project = this.provider.project
+
+  const auth = await this.provider.getAuthClient()
+  const params = {
+    auth,
     project,
     deployment: `sls-${this.serverless.service.service}-${this.options.stage}`,
-  })
+  }
+
+  const { data } = await this.provider.sdk.deploymentmanager.resources.list(params)
+  return data
 }
 
 export interface LogData {
@@ -28,16 +33,11 @@ export interface LogData {
     functions: any[]
   }
 }
-export interface Resource {
-  name: string
-  type: string
-}
-export interface Resources {
-  resources: Resource[]
-}
+
+export type Resources = deploymentmanager_v2.Schema$ResourcesListResponse
+export type Resource = deploymentmanager_v2.Schema$ResourcesListResponse['resources'][number]
 export const gatherData = function (this: GoogleInfo, resources: Resources) {
-  //@ts-expect-error project not on provider
-  const project = this.serverless.service.provider.project as string
+  const project = this.provider.googleProvider.project
 
   const data: LogData = {
     project: project,

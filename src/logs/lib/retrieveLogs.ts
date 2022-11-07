@@ -8,24 +8,26 @@ export const retrieveLogs = async function (this: GoogleLogs) {
   this.printLogs(logs)
 }
 
-export const getLogs = function (this: GoogleLogs) {
-  //@ts-expect-error project not on AWS provider
-  const project = this.serverless.service.provider.project
+export const getLogs = async function (this: GoogleLogs) {
+  const project = this.provider.googleProvider.project
   let func = this.options.function
-  //@ts-expect-error count not on options
   const count = this.options.count
-  const pageSize = parseInt(count, 10) || 10
+  const pageSize = count ? parseInt(count, 10) : 10
 
   const allFunctions = this.serverless.service.functions as unknown as GoogleServerlessConfig['functions']
   func = getGoogleCloudFunctionName(allFunctions, func)
 
-  return this.provider.request('logging', 'entries', 'list', {
-    //@ts-expect-error filter not on there
+  const auth = await this.provider.getAuthClient()
+  const params = {
+    auth,
     filter: `resource.labels.function_name="${func}" AND NOT textPayload=""`,
     orderBy: 'timestamp desc',
     resourceNames: [`projects/${project}`],
     pageSize,
-  })
+  }
+
+  const { data } = await this.provider.sdk.logging.entries.list(params)
+  return data
 }
 
 export interface GoogleLog {

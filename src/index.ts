@@ -1,5 +1,5 @@
-import type Serverless from 'serverless'
-import Plugin, { Hooks } from 'serverless/classes/plugin'
+import type Serverless from '@/@types/serverless'
+import Plugin, { Hooks } from '@/@types/serverless/classes/plugin'
 
 import { GoogleProvider } from './provider'
 import { GooglePackage } from './package'
@@ -9,6 +9,7 @@ import { GoogleRemove } from './remove'
 import { GoogleInvokeLocal } from './invoke-local'
 import { GoogleLogs } from './logs'
 import { GoogleInfo } from './info'
+import { Logging } from 'serverless/classes/Plugin'
 
 /**
  * **NOTE:** this plugin is used to add all the different provider related plugins at once.
@@ -19,10 +20,13 @@ class GoogleServerlessPlugin implements Plugin {
   serverless: Serverless
   options: Serverless.Options
   hooks: Hooks
+  logging: Logging
 
-  constructor(serverless: Serverless, options: Serverless.Options) {
+  constructor(serverless: Serverless, options: Serverless.Options, logging: Logging) {
     this.serverless = serverless
     this.options = options
+    this.logging = logging
+    // TODO: Figure out how to pass logging down. Not picked up by child plugins
 
     this.serverless.pluginManager.addPlugin(GoogleProvider)
     this.serverless.pluginManager.addPlugin(GooglePackage)

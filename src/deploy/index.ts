@@ -1,9 +1,9 @@
-import Serverless from 'serverless'
-import Aws from 'serverless/aws'
-import { Hooks } from 'serverless/classes/plugin'
+import type Serverless from '@/@types/serverless'
+import type { Hooks } from '@/@types/serverless/classes/plugin'
+import { deploymentmanager_v2 } from 'googleapis'
 
 import { monitorDeployment, validateAndSetDefaults, setDeploymentBucketName } from '../shared'
-import { constants } from '../provider'
+import { constants, GoogleProvider } from '../provider'
 import {
   uploadArtifacts,
   update,
@@ -18,7 +18,7 @@ import {
 export class GoogleDeploy {
   hooks: Hooks
   options: Serverless.Options
-  provider: Aws
+  provider: GoogleProvider
   serverless: Serverless
   validateAndSetDefaults: () => void
   setDeploymentBucketName: () => void
@@ -68,14 +68,7 @@ export class GoogleDeploy {
   }
 }
 
-export type Deployment = {
-  name: string
-  target: {
-    config: {
-      content: string
-    }
-  }
-}
+export type Deployment = deploymentmanager_v2.Schema$Deployment
 interface CloudStorageObjects {
   bucket: string
   name: string

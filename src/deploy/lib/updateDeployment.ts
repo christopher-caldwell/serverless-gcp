@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import { GoogleDeploy } from '..'
+import { Deployment, GoogleDeploy } from '..'
 
 export const updateDeployment = async function (this: GoogleDeploy) {
   const deployment = await this.getDeployment()
@@ -9,14 +9,14 @@ export const updateDeployment = async function (this: GoogleDeploy) {
 }
 
 export const getDeployment = async function (this: GoogleDeploy) {
+  const auth = await this.provider.getAuthClient()
   const params = {
-    //@ts-expect-error project is not on AWS
-    project: this.serverless.service.provider.project,
+    auth,
+    project: this.provider.googleProvider.project,
   }
 
-  //@ts-expect-error params signature is different
-  const response = await this.provider.request('deploymentmanager', 'deployments', 'list', params)
-  const deployment = response.deployments.find((dep) => {
+  const { data } = await this.provider.sdk.deploymentmanager.deployments.list(params)
+  const deployment = data.deployments.find((dep) => {
     const name = `sls-${this.serverless.service.service}-${this.options.stage}`
     return dep.name === name
   })
@@ -26,16 +26,17 @@ export const getDeployment = async function (this: GoogleDeploy) {
   return deployment
 }
 
-export const update = async function (this: GoogleDeploy, deployment: any) {
+export const update = async function (this: GoogleDeploy, deployment: Deployment) {
   this.serverless.cli.log('Updating deployment...')
 
   const filePath = path.join(this.serverless.config.servicePath, '.serverless', 'configuration-template-update.yml')
 
   const deploymentName = `sls-${this.serverless.service.service}-${this.options.stage}`
 
+  const auth = await this.provider.getAuthClient()
   const params = {
-    //@ts-expect-error project not on AWS
-    project: this.serverless.service.provider.project,
+    auth,
+    project: this.provider.googleProvider.project,
     deployment: deploymentName,
     resource: {
       name: deploymentName,
@@ -48,8 +49,7 @@ export const update = async function (this: GoogleDeploy, deployment: any) {
     },
   }
 
-  //@ts-expect-error params signature
-  await this.provider.request('deploymentmanager', 'deployments', 'update', params)
+  await this.provider.sdk.deploymentmanager.deployments.update(params)
 
   return this.monitorDeployment(deploymentName, 'update', 5000)
 }
