@@ -12,7 +12,7 @@ const esBuildConfig: Partial<EsBuildConfig> = {
 const serverlessConfig: GoogleServerlessConfig = {
   frameworkVersion: '3',
   service: 'example',
-  plugins: ['serverless-esbuild', './dist/index.js'],
+  plugins: ['serverless-esbuild', '../../dist/index.js'],
   custom: {
     esbuild: esBuildConfig,
   },

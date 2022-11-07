@@ -1,0 +1,5 @@
+.esbuild
+yarn-error.log
+.env
+.serverless
+.webpack

@@ -1,3 +1,4 @@
+import { GoogleFunctionDefinition } from '@/shared/types'
 import chalk from 'chalk'
 import { deploymentmanager_v2 } from 'googleapis'
 import _ from 'lodash'
@@ -56,7 +57,7 @@ export const gatherData = function (this: GoogleInfo, resources: Resources) {
         this.serverless.service.service,
         this.options.stage,
       )
-      const serviceFunc = this.serverless.service.getFunction(serviceFuncName)
+      const serviceFunc = this.serverless.service.getFunction<GoogleFunctionDefinition>(serviceFuncName)
       const eventType = Object.keys(serviceFunc.events[0])[0]
       const funcEventConfig = serviceFunc.events[0][eventType]
       let funcResource = funcEventConfig.resource || null

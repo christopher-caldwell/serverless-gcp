@@ -1,0 +1,20 @@
+{
+  "name": "esbuild-example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "invoke:test": ". .env && npx serverless invoke local --function Test --verbose",
+    "invoke:something-else": ". .env && npx serverless invoke local --function SomethingElse --verbose",
+    "package": ". .env && npx serverless package --verbose"
+  },
+  "dependencies": {
+    "@caldwell/serverless-google-cloud": "link:../../",
+    "serverless": "^3.24.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.15.13",
+    "serverless-esbuild": "^1.33.1",
+    "ts-node": "^10.9.1"
+  }
+}
