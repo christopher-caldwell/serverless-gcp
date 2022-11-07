@@ -103,6 +103,7 @@ declare class Serverless {
 
   service: Service
   version: string
+  processedInput: any
 
   resources: AwsProvider.Resources
 

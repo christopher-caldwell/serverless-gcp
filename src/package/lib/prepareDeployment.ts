@@ -4,8 +4,7 @@ import _ from 'lodash'
 import { _Plugin } from '../../shared'
 
 export const prepareDeployment = function (this: _Plugin) {
-  //@ts-expect-error compiledConfigurationTemplate on the types is cloudformation
-  let deploymentTemplate = this.serverless.service.provider.compiledConfigurationTemplate
+  let deploymentTemplate = this.provider.googleProvider.compiledConfigurationTemplate
   // let deploymentTemplate = this.provider.googleProvider.compiledConfigurationTemplate || _deploymentTemplate
 
   // Need to copy this template during build
@@ -23,8 +22,7 @@ export const prepareDeployment = function (this: _Plugin) {
 
   deploymentTemplate.resources[bucketIndex] = updatedBucket
 
-  //@ts-expect-error compiledConfigurationTemplate on the types is cloudformation
-  this.serverless.service.provider.compiledConfigurationTemplate = deploymentTemplate
+  this.provider.googleProvider.compiledConfigurationTemplate = deploymentTemplate
 }
 
 const updateBucket = (bucket: { name: string; properties?: { location: string } }, name: string, location: string) => {

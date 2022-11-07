@@ -57,7 +57,6 @@ export class GoogleInvokeLocal implements Plugin {
 
     this.hooks = {
       initialize: () => {
-        //@ts-expect-error processedInput not on serverless
         this.options = this.serverless.processedInput.options
       },
       'before:invoke:local:invoke': async () => {
@@ -69,9 +68,7 @@ export class GoogleInvokeLocal implements Plugin {
   }
 
   async invokeLocal() {
-    const functionObj = this.serverless.service.getFunction(
-      this.options.function,
-    ) as unknown as GoogleFunctionDefinition
+    const functionObj = this.serverless.service.getFunction<GoogleFunctionDefinition>(this.options.function)
     validateEventsProperty(functionObj, this.options.function)
 
     const runtime = this.provider.getRuntime(functionObj)

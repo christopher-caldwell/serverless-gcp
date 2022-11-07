@@ -60,7 +60,7 @@ declare class Service {
   getServiceName(): string
   getAllFunctions(): string[]
   getAllFunctionsNames(): string[]
-  getFunction(functionName: string): Serverless.FunctionDefinitionHandler | Serverless.FunctionDefinitionImage
+  getFunction<TFunction>(functionName: string): TFunction
   getEventInFunction(eventName: string, functionName: string): Serverless.Event
   getAllEventsInFunction(functionName: string): Serverless.Event[]
 

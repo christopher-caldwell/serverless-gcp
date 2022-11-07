@@ -104,9 +104,7 @@ export function compileFunctions(this: GooglePackage) {
         }
       }
     }
-    //@ts-expect-error Seems to be called `compiledCloudFormationTemplate`
-    this.serverless.service.provider.compiledConfigurationTemplate.resources.push(funcTemplate)
-    // this.serverless.service.provider.compiledCloudFormationTemplate.resources.push(funcTemplate)
+    this.provider.googleProvider.compiledConfigurationTemplate.resources.push(funcTemplate)
   })
 }
 
