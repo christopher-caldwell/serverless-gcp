@@ -9,9 +9,9 @@ import {
   saveUpdateTemplateFile,
   cleanupServerlessDir,
   mergeServiceResources,
-  generateArtifactDirectoryName,
+  generateArtifactDirectoryNames,
 } from './lib'
-import { validateAndSetDefaults, setDeploymentBucketName } from '../shared'
+import { getFunctionPath, validateAndSetDefaults, setDeploymentBucketName, GoogleFunctionDefinition } from '../shared'
 
 export class GooglePackage implements Plugin {
   hooks: Hooks
@@ -29,6 +29,11 @@ export class GooglePackage implements Plugin {
   saveCreateTemplateFile: () => void
   saveUpdateTemplateFile: () => void
   setDeploymentBucketName: () => void
+  getFunctionPath: (functionOb: GoogleFunctionDefinition) => {
+    handlerName: string
+    fullPath: string
+    handlerContainer: Record<string, any>
+  }
 
   constructor(serverless: Serverless, options: Serverless.Options, logging: Logging) {
     this.serverless = serverless
@@ -68,7 +73,8 @@ export class GooglePackage implements Plugin {
     this.setDeploymentBucketName = setDeploymentBucketName.bind(this)
     this.prepareDeployment = prepareDeployment.bind(this)
     this.saveCreateTemplateFile = saveCreateTemplateFile.bind(this)
-    this.generateArtifactDirectoryName = generateArtifactDirectoryName.bind(this)
+    this.generateArtifactDirectoryName = generateArtifactDirectoryNames.bind(this)
+    this.getFunctionPath = getFunctionPath.bind(this)
     this.mergeServiceResources = mergeServiceResources.bind(this)
     this.saveUpdateTemplateFile = saveUpdateTemplateFile.bind(this)
 

@@ -6,7 +6,8 @@
   "scripts": {
     "invoke:test": ". .env && npx serverless invoke local --function Test --verbose",
     "invoke:something-else": ". .env && npx serverless invoke local --function SomethingElse --verbose",
-    "package": ". .env && npx serverless package --verbose"
+    "package": ". .env && npx serverless package --verbose",
+    "deploy": ". .env && npx serverless deploy --verbose"
   },
   "dependencies": {
     "@caldwell/serverless-google-cloud": "link:../../",

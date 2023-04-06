@@ -11,14 +11,22 @@ import {
   GoogleVpcEgress,
 } from '../../shared/types'
 
+/** Writes the function declarations into the resource template */
 export function compileFunctions(this: GooglePackage) {
   const artifactFilePath = this.serverless.service.package.artifactDirectoryName
   const fileName = artifactFilePath.split(path.sep).pop()
   const projectName = _.get(this, 'serverless.service.provider.project')
   this.serverless.service.provider.region = this.serverless.service.provider.region || 'us-central1'
+  // TODO: This may be why package individually doesn't work
+  // Need to add separate locations for artifacts when package individually is set
   this.serverless.service.package.artifactFilePath = `${this.serverless.service.package.artifactDirectoryName}/${fileName}`
+  console.log({
+    fileName,
+    artifactFilePath,
+    art: `${this.serverless.service.package.artifactDirectoryName}/${fileName}`,
+  })
   this.serverless.service.getAllFunctions().forEach((functionName) => {
-    const funcObject = this.serverless.service.getFunction(functionName) as unknown as GoogleFunctionDefinition
+    const funcObject = this.serverless.service.getFunction<GoogleFunctionDefinition>(functionName)
     let vpcEgress = funcObject.vpcEgress || this.provider.googleProvider.vpcEgress
     this.serverless.cli.log(`Compiling function "${functionName}"...`)
     validateHandlerProperty(funcObject, functionName)
@@ -28,7 +36,7 @@ export function compileFunctions(this: GooglePackage) {
     const funcTemplate = getDefaultFunctionTemplate(
       funcObject,
       projectName,
-      this.serverless.service.provider.region as GoogleRegion,
+      this.provider.googleProvider.region,
       `gs://${this.provider.googleProvider.deploymentBucketName}/${this.serverless.service.package.artifactFilePath}`,
     )
     funcTemplate.properties.serviceAccountEmail =

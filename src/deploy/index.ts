@@ -2,7 +2,13 @@ import type Serverless from '@/@types/serverless'
 import type { Hooks } from '@/@types/serverless/classes/plugin'
 import { deploymentmanager_v2 } from 'googleapis'
 
-import { monitorDeployment, validateAndSetDefaults, setDeploymentBucketName } from '../shared'
+import {
+  monitorDeployment,
+  validateAndSetDefaults,
+  setDeploymentBucketName,
+  GoogleFunctionDefinition,
+  getFunctionPath,
+} from '../shared'
 import { constants, GoogleProvider } from '../provider'
 import {
   uploadArtifacts,
@@ -33,6 +39,11 @@ export class GoogleDeploy {
   cleanupDeploymentBucket: () => Promise<void>
   getObjectsToRemove: () => Promise<ObjectToRemove[]>
   removeObjects: (objectsToRemove: ObjectToRemove[]) => Promise<void>
+  getFunctionPath: (functionObj: GoogleFunctionDefinition) => {
+    handlerName: string
+    fullPath: string
+    handlerContainer: Record<string, any>
+  }
 
   constructor(serverless: Serverless, options: Serverless.Options) {
     this.serverless = serverless
@@ -49,6 +60,7 @@ export class GoogleDeploy {
     this.checkForExistingDeployment = checkForExistingDeployment.bind(this)
     this.createDeployment = createDeployment.bind(this)
     this.createIfNotExists = createIfNotExists.bind(this)
+    this.getFunctionPath = getFunctionPath.bind(this)
 
     this.hooks = {
       'before:deploy:deploy': async () => {
